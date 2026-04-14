@@ -60,6 +60,7 @@ export default function IndexPage() {
     const handleRetry = () => {
         setView("loading");
         console.log('Retrying geolocation');
+        handleLocation()
         // Add your retry logic here
     };
     const handleLocation = () => {
@@ -84,6 +85,7 @@ export default function IndexPage() {
             { timeout: 10000, maximumAge: 0 }
         );
     };
+
     useEffect(() => {
         console.log(sessionId);
         if (!sessionId) {
@@ -169,7 +171,7 @@ export default function IndexPage() {
                         <button
                             onClick={handleSubmit}
                             disabled={submitting}
-                            className="w-full py-3.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] active:scale-[0.98] text-white text-sm font-semibold tracking-wide transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full py-3.5 rounded-xl bg-[#2b7234] hover:bg-[#153619] active:scale-[0.98] text-white text-sm font-semibold tracking-wide transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {submitting ? (
                                 <>
