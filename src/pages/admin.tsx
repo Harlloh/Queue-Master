@@ -9,12 +9,15 @@ import {
     MdListAlt,
     MdLink,
     MdWarning,
+    MdOutdoorGrill,
 } from "react-icons/md";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import AdminCard from "../comonents/adminCard";
 import Input from "../comonents/inputField";
 import Feedback from "../comonents/toast";
 import Label from "../comonents/label";
+import api from "../lib/axios";
+import { useAuth } from "../store/authStore";
 
 // ─── Seed data (replace with real API calls) ──────────────────────────────────
 const SEED_RECORDS = [
@@ -30,6 +33,7 @@ type Record = { id: number; number: number; name: string; stateCode: string; tim
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function AdminPage() {
+    const { setAdmin } = useAuth()
     // ── Session ──
     const [sessionOpen, setSessionOpen] = useState(false);
     const [lga, setLga] = useState("");
@@ -52,6 +56,9 @@ export default function AdminPage() {
     const [radius, setRadius] = useState("200");
     const [configMsg, setConfigMsg] = useState("");
     const [configError, setConfigError] = useState("");
+
+
+    const navigate = useNavigate()
 
     // ── Handlers ──
     const openSession = () => {
@@ -108,6 +115,14 @@ export default function AdminPage() {
         setTimeout(() => setConfigMsg(""), 3500);
     };
 
+    const handleLogOut = async () => {
+        const res = await api.get('/auth/logout');
+        if (res.data.success) {
+            setAdmin(null)
+            navigate('/admin-login')
+        }
+    }
+
     return (
         <div className="min-h-screen bg-[#F4F6FA] font-sans">
 
@@ -135,6 +150,12 @@ export default function AdminPage() {
                 >
                     <MdLink className="text-sm" /> Check-in page
                 </Link>
+                <button
+                    onClick={handleLogOut}
+                    className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition"
+                >
+                    <MdOutdoorGrill className="text-sm" /> Log Out
+                </button>
             </header>
 
             {/* ── Session banner (visible when open) ──────────────────── */}

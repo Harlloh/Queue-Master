@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { MdLock, MdVisibility, MdVisibilityOff, MdError } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
-import api from "../lib/axios";
 import { useAuth } from "../store/authStore";
 
 type LoginState = "idle" | "loading" | "error";
@@ -28,12 +27,12 @@ export default function LoginPage() {
 
         try {
             // ── Uncomment when backend is ready ──
-            login(email, password);
+            const loggedIn = await login(email, password);
 
-            // ── Mock: remove this block when wiring up ──
-            await new Promise((res) => setTimeout(res, 1200));
-            navigate("/admin-dashboard");
-
+            console.log(loggedIn)
+            if (loggedIn) { navigate("/admin-dashboard"); }
+            setStatus('error')
+            setErrorMsg('Something went wrong')
         } catch (err: any) {
             const msg = err.response?.data?.message;
             setErrorMsg(msg ?? "Invalid credentials. Try again.");

@@ -18,9 +18,9 @@ function App() {
     {
       path: '/admin-dashboard',
       element: (
-        //<ProtectedRoute>
-        <AdminPage />
-        //</ProtectedRoute>
+        <ProtectedRoute>
+          <AdminPage />
+        </ProtectedRoute>
       )
     },
     {

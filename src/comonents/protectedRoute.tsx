@@ -3,9 +3,10 @@ import { useAuth } from "../store/authStore";
 import type { ReactNode } from "react";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
-    const { isAdmin, isAuthenticated } = useAuth()
+    const { admin } = useAuth()
+    console.log(admin);
 
-    if (!isAdmin && !isAuthenticated) {
+    if (!admin) {
         return <Navigate to='/admin-login' replace />
     }
 
