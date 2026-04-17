@@ -24,9 +24,9 @@ import type { SessionInterface } from "../lib/utils";
 //     lga: "Eti-Osa",
 //     cdsGroup: "Tech Hub 3",
 // };
-
+type stateType = "loading" | "no_location" | "no_session" | "outside" | "no_location_access" | "requesting_location_access" | "form" | "success" | "already_in"
 export default function IndexPage() {
-    const [view, setView] = useState("loading");
+    const [view, setView] = useState<stateType>("loading");
     const [form, setForm] = useState({ name: "", stateCode: "" });
     const [sessionInfo, setSessionInfo] = useState<SessionInterface | null>(null)
     const [queueNumber, setQueueNumber] = useState<number>(0o1);
@@ -57,48 +57,118 @@ export default function IndexPage() {
     const sessionLabel =
         sessionInfo ? `${sessionInfo?.lga} · ${sessionInfo?.cdsGroup}` : null;
 
-    const handleRetry = () => {
-        setView("loading");
-        console.log('Retrying geolocation');
-        handleLocation()
-        // Add your retry logic here
-    };
-    const handleLocation = () => {
-        if (!navigator.geolocation) {
-            setView("no_location");
+    const handleRetry = async () => {
+        console.log('Retrying...');
+
+        // Start getting location immediately
+        const location = await getLocation();
+
+        if (!location) {
+            // Location failed, view already set by getLocation()
             return;
         }
 
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const { latitude, longitude } = position.coords;
-                console.log({ latitude, longitude }); // ← just this for now
-                setView("form"); // remove this too when real validation is wired up
-                // const res = await api.get(
-                //     `/api/session/${sessionId}/validate`, // ← this validates the session AND checks location
-                //     { params: { lat: latitude, lng: longitude } }
-                // );
-            },
-            (_err) => {
-                setView("no_location");
-            },
-            { timeout: 10000, maximumAge: 0 }
-        );
+        // Validate the location
+        await validateLocation(location.latitude, location.longitude);
+    };
+    const validateLocation = async (latitude: number, longitude: number) => {
+        setView("loading");
+
+        // Simulate location validation delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Later replace with actual API call:
+        // const res = await api.get(
+        //     `/api/session/${sessionId}/validate-location`,
+        //     { params: { lat: latitude, lng: longitude } }
+        // );
+
+        // if (res.data.withinGeofence) {
+        //     setView("form");
+        // } else {
+        //     setView("outside");
+        // }
+
+        setView("form");
+    };
+    const getLocation = async (): Promise<{ latitude: number; longitude: number } | null> => {
+        if (!navigator.geolocation) {
+            setView("no_location_access");
+            return null;
+        }
+
+        try {
+            const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(
+                    resolve,
+                    reject,
+                    { maximumAge: 0, enableHighAccuracy: true }
+                );
+            });
+
+            return {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude
+            };
+        } catch (error: any) {
+            console.error('Location error:', error);
+
+            if (error.code === 1) {
+                console.log('User denied location permission');
+            } else if (error.code === 3) {
+                console.log('Location request timed out');
+            }
+
+            setView("no_location_access");
+            return null;
+        }
     };
 
     useEffect(() => {
-        console.log(sessionId);
-        if (!sessionId) {
-            setView("no_session");
-            return;
-        };
-        if (!navigator.geolocation) {
-            setView("no_location");
-            return;
-        }
-        handleLocation()
+        const init = async () => {
+            console.log(sessionId, 'sessionid');
 
-    }, [sessionId])
+            if (!sessionId || sessionId === 'no_session') {
+                setView("no_session");
+                return;
+            }
+
+            setView("loading");
+
+            // Start getting location immediately (runs in background)
+            const locationPromise = getLocation();
+
+            // Validate session
+            try {
+                // Simulate session validation
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                // const sessionRes = await api.get(`/api/session/${sessionId}/validate-session`);
+
+                // if (!sessionRes.data.isActive) {
+                //     setView("no_session");
+                //     return;
+                // }
+
+                // Session is valid, now wait for location to be ready
+                const location = await locationPromise;
+
+                if (!location) {
+                    // Location failed, view already set by getLocation()
+                    return;
+                }
+
+                // Session is valid and we have location, now validate location
+                await validateLocation(location.latitude, location.longitude);
+
+            } catch (error) {
+                console.error('Session validation failed:', error);
+                setView("no_session");
+            }
+        };
+
+        init();
+    }, [sessionId]);
 
 
     // const validateSession = async () => {
@@ -130,7 +200,7 @@ export default function IndexPage() {
             {/* ── Card ── */}
             <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                 {/* Simple states - using StateCard */}
-                {["loading", "no_location", "no_session", "outside"].includes(view) && (
+                {["loading", "no_location", "no_session", "outside", "no_location_access", "requesting_location_access"].includes(view) && (
                     <StateCard state={view} onRetry={handleRetry} />
                 )}
 

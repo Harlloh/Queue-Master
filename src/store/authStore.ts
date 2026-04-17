@@ -11,7 +11,8 @@ interface AuthType {
     isAdmin: null | any,
     isAuthenticated: boolean,
     login: (email: string, password: string) => Promise<boolean>;
-    admin: AdminType | null
+    admin: AdminType | null;
+    sessionId: string
 }
 export const useAuth = create<AuthType>()(
     persist(
@@ -19,6 +20,7 @@ export const useAuth = create<AuthType>()(
             isAuthenticated: false,
             isAdmin: null,
             admin: null,
+            sessionId: '',
 
             login: async (email: string, password: string) => {
                 try {

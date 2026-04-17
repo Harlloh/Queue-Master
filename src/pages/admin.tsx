@@ -1,16 +1,20 @@
 import { useState } from "react";
 import {
-    MdOpenInNew,
-    MdLockOpen,
     MdLock,
+    MdLockOpen,
     MdMyLocation,
     MdSave,
     MdPersonAdd,
-    MdRadar,
     MdSettings,
     MdListAlt,
     MdLink,
+    MdWarning,
 } from "react-icons/md";
+import { Link } from "react-router-dom";
+import AdminCard from "../comonents/adminCard";
+import Input from "../comonents/inputField";
+import Feedback from "../comonents/toast";
+import Label from "../comonents/label";
 
 // ─── Seed data (replace with real API calls) ──────────────────────────────────
 const SEED_RECORDS = [
@@ -19,16 +23,22 @@ const SEED_RECORDS = [
     { id: 3, number: 3, name: "Emeka Okafor", stateCode: "LA/23A/0734", time: "08:27 AM" },
 ];
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+type Record = { id: number; number: number; name: string; stateCode: string; time: string };
+
+
+
+// ─── Main page ────────────────────────────────────────────────────────────────
 export default function AdminPage() {
-    // ── Session state ──
+    // ── Session ──
     const [sessionOpen, setSessionOpen] = useState(false);
     const [lga, setLga] = useState("");
     const [cdsGroup, setCdsGroup] = useState("");
     const [sessionLga, setSessionLga] = useState("");
     const [sessionCds, setSessionCds] = useState("");
 
-    // ── Attendance records ──
-    const [records, setRecords] = useState<{ id: number; number: number; name: string; stateCode: string; time: string }[]>([]);
+    // ── Attendance ──
+    const [records, setRecords] = useState<Record[]>([]);
 
     // ── Manual assignment ──
     const [manualName, setManualName] = useState("");
@@ -54,23 +64,21 @@ export default function AdminPage() {
 
     const closeSession = () => {
         setSessionOpen(false);
+        setRecords([]);
     };
 
     const assignManual = () => {
         if (!manualName.trim() || !manualCode.trim()) return;
         const next = records.length + 1;
-        const now = new Date().toLocaleTimeString("en-NG", {
-            hour: "2-digit",
-            minute: "2-digit",
-        });
-        setRecords((prev: any) => [
+        const now = new Date().toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit" });
+        setRecords((prev) => [
             ...prev,
             { id: Date.now(), number: next, name: manualName, stateCode: manualCode, time: now },
         ]);
         setAssignMsg(`Assigned #${String(next).padStart(3, "0")} to ${manualName}`);
         setManualName("");
         setManualCode("");
-        setTimeout(() => setAssignMsg(""), 3000);
+        setTimeout(() => setAssignMsg(""), 5000);
     };
 
     const useCurrentLocation = () => {
@@ -86,66 +94,98 @@ export default function AdminPage() {
 
     const saveConfig = () => {
         setConfigError("");
+        setConfigMsg("");
         const r = parseFloat(radius);
         if (!configLga.trim() || !lat || !lng) {
             setConfigError("All fields are required.");
             return;
         }
         if (r < 50 || r > 1000) {
-            setConfigError("Radius must be between 50m and 1000m.");
+            setConfigError("Radius must be between 50 m and 1000 m.");
             return;
         }
-        setConfigMsg("Location settings updated successfully");
-        setTimeout(() => setConfigMsg(""), 3000);
+        setConfigMsg("Location settings saved successfully.");
+        setTimeout(() => setConfigMsg(""), 3500);
     };
 
     return (
         <div className="min-h-screen bg-[#F4F6FA] font-sans">
-            {/* ── Top nav ── */}
-            <header className="bg-[#0F1B3C] text-white px-5 py-3.5 flex items-center justify-between sticky top-0 z-10 shadow-md">
-                <span className="font-bold text-base tracking-tight">CDS Admin</span>
-                <a
-                    href="/"
-                    className="text-xs text-slate-300 hover:text-white flex items-center gap-1 transition"
+
+            {/* ── Top nav ─────────────────────────────────────────────── */}
+            <header className="bg-[#153619] text-white px-5 py-3.5 flex items-center justify-between sticky top-0 z-10 shadow-md">
+                <div className="flex items-center gap-3">
+                    {/* Logo mark — mirrors the login screen */}
+                    <div className="w-8 h-8 rounded-lg bg-[#2b7234] flex items-center justify-center shrink-0">
+                        <MdLock className="text-white text-sm" />
+                    </div>
+                    <div>
+                        <span className="font-bold text-sm tracking-widest uppercase">CDS Admin</span>
+                        {sessionOpen && (
+                            <span className="ml-2.5 text-[10px] font-semibold text-[#25eb2f] bg-[#25eb2f]/10 border border-[#25eb2f]/20 px-2 py-0.5 rounded-full uppercase tracking-widest align-middle">
+                                Session Open
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+                {/* REMEMBER TO SET THIS TO THE CURRENT OPEN SESSION */}
+                <Link
+                    to="/"
+                    className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition"
                 >
                     <MdLink className="text-sm" /> Check-in page
-                </a>
+                </Link>
             </header>
 
+            {/* ── Session banner (visible when open) ──────────────────── */}
+            {sessionOpen && (
+                <div className="bg-[#2b7234]/8 border-b border-[#2b7234]/15 px-5 py-2.5 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#25eb2f] animate-pulse shrink-0" />
+                    <p className="text-xs font-semibold text-[#2b7234]">
+                        Active session — {sessionLga} · {sessionCds}
+                    </p>
+                    <span className="ml-auto text-xs text-slate-500 font-medium">
+                        {records.length} checked in
+                    </span>
+                </div>
+            )}
+
+
+
+
             <main className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-5">
-                {/* ─── Session Control ─────────────────────────────────────────── */}
-                <Section
-                    icon={<MdLockOpen className="text-lg text-[#2563EB]" />}
+
+                {/* ─── 1. Session Control ─────────────────────────────── */}
+                <AdminCard
+                    icon={<MdLockOpen className="text-lg" />}
                     title="Session Control"
+                    subtitle="Open a session to allow corper check-ins. Close it when attendance ends."
                     badge={
                         sessionOpen ? (
-                            <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                OPEN
+                            <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#2b7234] bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full uppercase tracking-wide">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#25eb2f] animate-pulse" />
+                                Open
                             </span>
-                        ) : null
+                        ) : (
+                            <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full uppercase tracking-wide">
+                                Closed
+                            </span>
+                        )
                     }
                 >
-                    {sessionOpen && (
-                        <p className="text-xs text-slate-500 mb-3 font-mono">
-                            {sessionLga} — {sessionCds}
-                        </p>
-                    )}
                     <div className="grid grid-cols-2 gap-3 mb-4">
-                        <div className="flex flex-col gap-1">
-                            <label className="field-label">LGA</label>
-                            <input
-                                className="field-input"
+                        <div>
+                            <Label>LGA</Label>
+                            <Input
                                 placeholder="e.g. Eti-Osa"
                                 value={lga}
                                 onChange={(e) => setLga(e.target.value)}
                                 disabled={sessionOpen}
                             />
                         </div>
-                        <div className="flex flex-col gap-1">
-                            <label className="field-label">CDS Group</label>
-                            <input
-                                className="field-input"
+                        <div>
+                            <Label>CDS Group</Label>
+                            <Input
                                 placeholder="e.g. Tech Hub 3"
                                 value={cdsGroup}
                                 onChange={(e) => setCdsGroup(e.target.value)}
@@ -153,60 +193,65 @@ export default function AdminPage() {
                             />
                         </div>
                     </div>
+
                     <div className="grid grid-cols-2 gap-3">
                         <button
                             onClick={openSession}
                             disabled={sessionOpen || !lga.trim() || !cdsGroup.trim()}
-                            className="btn-primary"
+                            className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#2b7234] hover:bg-[#153619] text-white text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             <MdLockOpen className="text-base" /> Open Session
                         </button>
                         <button
                             onClick={closeSession}
                             disabled={!sessionOpen}
-                            className="btn-danger"
+                            className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             <MdLock className="text-base" /> Close Session
                         </button>
                     </div>
-                </Section>
+                </AdminCard>
 
-                {/* ─── Live Attendance ─────────────────────────────────────────── */}
-                <Section
-                    icon={<MdListAlt className="text-lg text-[#2563EB]" />}
+                {/* ─── 2. Live Attendance ─────────────────────────────── */}
+                <AdminCard
+                    icon={<MdListAlt className="text-lg" />}
                     title="Live Attendance"
+                    subtitle="Real-time list of all corpers checked in for this session."
                     badge={
-                        <span className="text-xs text-slate-500 font-medium">
-                            {records.length} checked in
+                        <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+                            {records.length} total
                         </span>
                     }
                 >
                     {records.length === 0 ? (
-                        <p className="text-center text-sm text-slate-400 py-6">
-                            No check-ins yet
-                        </p>
+                        <div className="py-8 flex flex-col items-center gap-2 text-center">
+                            <MdListAlt className="text-3xl text-slate-200" />
+                            <p className="text-sm text-slate-400">No check-ins yet.</p>
+                            {!sessionOpen && (
+                                <p className="text-xs text-slate-300">Open a session to start.</p>
+                            )}
+                        </div>
                     ) : (
                         <div className="overflow-x-auto -mx-5">
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr className="border-b border-slate-100">
-                                        <th className="table-head pl-5 w-12">#</th>
-                                        <th className="table-head text-left">Name</th>
-                                        <th className="table-head text-left">State Code</th>
-                                        <th className="table-head pr-5 text-right">Time</th>
+                                        <th className="text-left py-2 pl-5 pr-3 text-[11px] font-bold uppercase tracking-widest text-slate-400 w-14">#</th>
+                                        <th className="text-left py-2 pr-3 text-[11px] font-bold uppercase tracking-widest text-slate-400">Name</th>
+                                        <th className="text-left py-2 pr-3 text-[11px] font-bold uppercase tracking-widest text-slate-400">State Code</th>
+                                        <th className="text-right py-2 pr-5 text-[11px] font-bold uppercase tracking-widest text-slate-400">Time</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {records.map((r: any) => (
-                                        <tr
-                                            key={r.id}
-                                            className="border-b border-slate-50 hover:bg-slate-50 transition"
-                                        >
-                                            <td className="py-3 pl-5 font-mono font-bold text-[#2563EB] text-xs">
-                                                {String(r.number).padStart(3, "0")}
+                                    {records.map((r) => (
+                                        <tr key={r.id} className="border-b border-slate-50 hover:bg-slate-50/60 transition">
+                                            <td className="py-3 pl-5 pr-3">
+                                                <span className="font-mono font-bold text-[#2b7234] text-xs bg-[#2b7234]/8 px-2 py-0.5 rounded-md">
+                                                    {String(r.number).padStart(3, "0")}
+                                                </span>
                                             </td>
-                                            <td className="py-3 text-slate-800 font-medium">{r.name}</td>
-                                            <td className="py-3 text-slate-500 font-mono text-xs">{r.stateCode}</td>
+                                            <td className="py-3 pr-3 font-medium text-slate-800">{r.name}</td>
+                                            <td className="py-3 pr-3 font-mono text-slate-500 text-xs">{r.stateCode}</td>
                                             <td className="py-3 pr-5 text-right text-slate-400 text-xs">{r.time}</td>
                                         </tr>
                                     ))}
@@ -214,213 +259,122 @@ export default function AdminPage() {
                             </table>
                         </div>
                     )}
-                </Section>
+                </AdminCard>
 
-                {/* ─── Manual Assignment ───────────────────────────────────────── */}
-                <Section
-                    icon={<MdPersonAdd className="text-lg text-[#2563EB]" />}
+                {/* ─── 3. Manual Assignment ───────────────────────────── */}
+                <AdminCard
+                    icon={<MdPersonAdd className="text-lg" />}
                     title="Manual Assignment"
+                    subtitle="Use this when a corper has a faulty device and cannot check in themselves."
                 >
-                    <p className="text-xs text-slate-400 mb-4">
-                        Use this for corpers with faulty devices.
-                    </p>
+                    {!sessionOpen && (
+                        <div className="flex items-center gap-2 mb-4 bg-amber-50 border border-amber-100 rounded-xl px-3.5 py-2.5">
+                            <MdWarning className="text-amber-500 shrink-0" />
+                            <p className="text-xs text-amber-700 font-medium">Open a session first to assign numbers.</p>
+                        </div>
+                    )}
                     <div className="flex flex-col gap-3">
-                        <input
-                            className="field-input"
-                            placeholder="Full Name"
-                            value={manualName}
-                            onChange={(e) => setManualName(e.target.value)}
-                        />
-                        <input
-                            className="field-input"
-                            placeholder="State Code  e.g. LA/23A/1234"
-                            value={manualCode}
-                            onChange={(e) => setManualCode(e.target.value)}
-                        />
-                        {assignMsg && (
-                            <p className="text-xs text-emerald-600 font-medium">{assignMsg}</p>
-                        )}
+                        <div>
+                            <Label>Full Name</Label>
+                            <Input
+                                placeholder="e.g. Adebayo Olamide"
+                                value={manualName}
+                                onChange={(e) => setManualName(e.target.value)}
+                                disabled={!sessionOpen}
+                            />
+                        </div>
+                        <div>
+                            <Label>State Code</Label>
+                            <Input
+                                placeholder="e.g. LA/23A/1234"
+                                value={manualCode}
+                                onChange={(e) => setManualCode(e.target.value)}
+                                disabled={!sessionOpen}
+                            />
+                        </div>
+                        {assignMsg && <Feedback type="success" message={assignMsg} />}
                         <button
                             onClick={assignManual}
                             disabled={!sessionOpen || !manualName.trim() || !manualCode.trim()}
-                            className="btn-primary"
+                            className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#2b7234] hover:bg-[#153619] text-white text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             <MdPersonAdd className="text-base" /> Assign Number
                         </button>
                     </div>
-                </Section>
+                </AdminCard>
 
-                {/* ─── System Config ───────────────────────────────────────────── */}
-                <Section
-                    icon={<MdSettings className="text-lg text-[#2563EB]" />}
+                {/* ─── 4. System Configuration ────────────────────────── */}
+                <AdminCard
+                    icon={<MdSettings className="text-lg" />}
                     title="System Configuration"
-                    subtitle="This location defines the allowed check-in area"
+                    subtitle="Set the LGA's geofence — corpers outside this radius cannot check in."
                 >
                     <div className="flex flex-col gap-3">
-                        <div className="flex flex-col gap-1">
-                            <label className="field-label">LGA Name</label>
-                            <input
-                                className="field-input"
+                        <div>
+                            <Label>LGA Name</Label>
+                            <Input
                                 placeholder="e.g. Ikeja"
                                 value={configLga}
                                 onChange={(e) => setConfigLga(e.target.value)}
                             />
                         </div>
+
                         <div className="grid grid-cols-2 gap-3">
-                            <div className="flex flex-col gap-1">
-                                <label className="field-label">Latitude</label>
-                                <input
-                                    className="field-input"
+                            <div>
+                                <Label>Latitude</Label>
+                                <Input
                                     placeholder="e.g. 6.6018"
                                     value={lat}
                                     onChange={(e) => setLat(e.target.value)}
                                 />
                             </div>
-                            <div className="flex flex-col gap-1">
-                                <label className="field-label">Longitude</label>
-                                <input
-                                    className="field-input"
+                            <div>
+                                <Label>Longitude</Label>
+                                <Input
                                     placeholder="e.g. 3.3515"
                                     value={lng}
                                     onChange={(e) => setLng(e.target.value)}
                                 />
                             </div>
                         </div>
-                        <div className="flex flex-col gap-1">
-                            <label className="field-label">Radius (meters)</label>
-                            <input
-                                className="field-input"
+
+                        <div>
+                            <Label>Geofence Radius (meters)</Label>
+                            <Input
                                 type="number"
                                 min={50}
                                 max={1000}
                                 value={radius}
                                 onChange={(e) => setRadius(e.target.value)}
                             />
-                            <p className="text-[11px] text-slate-400">Between 50m and 1000m</p>
+                            <p className="text-[11px] text-slate-400 mt-1">Between 50 m and 1000 m</p>
                         </div>
 
-                        {configError && (
-                            <p className="text-xs text-rose-500 font-medium">{configError}</p>
-                        )}
-                        {configMsg && (
-                            <p className="text-xs text-emerald-600 font-medium">{configMsg}</p>
-                        )}
+                        {configError && <Feedback type="error" message={configError} />}
+                        {configMsg && <Feedback type="success" message={configMsg} />}
 
                         <button
                             onClick={useCurrentLocation}
-                            className="w-full py-2.5 rounded-xl border border-slate-200 text-sm text-slate-600 font-medium hover:bg-slate-50 active:scale-[0.98] transition flex items-center justify-center gap-2"
+                            className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-600 font-semibold hover:bg-slate-50 active:scale-[0.98] transition"
                         >
-                            <MdMyLocation className="text-base text-rose-500" /> Use Current Location
+                            <MdMyLocation className="text-[#2b7234] text-base" /> Use Current Location
                         </button>
+
                         <button
                             onClick={saveConfig}
-                            className="btn-primary"
+                            className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#2b7234] hover:bg-[#153619] text-white text-sm font-bold transition-all active:scale-[0.98]"
                         >
                             <MdSave className="text-base" /> Save Settings
                         </button>
                     </div>
-                </Section>
+                </AdminCard>
+
             </main>
 
-            {/* ─── Tailwind utility classes injected via style tag ─────────────────── */}
-            <style>{`
-        .field-label {
-          font-size: 11px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: #64748b;
-        }
-        .field-input {
-          width: 100%;
-          padding: 10px 14px;
-          border-radius: 12px;
-          border: 1px solid #e2e8f0;
-          font-size: 14px;
-          color: #1e293b;
-          background: #fff;
-          outline: none;
-          transition: border-color 0.15s, box-shadow 0.15s;
-        }
-        .field-input:focus {
-          border-color: #2563eb;
-          box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
-        }
-        .field-input:disabled {
-          background: #f8fafc;
-          color: #94a3b8;
-          cursor: not-allowed;
-        }
-        .btn-primary {
-          width: 100%;
-          padding: 11px 16px;
-          border-radius: 12px;
-          background: #2563eb;
-          color: #fff;
-          font-size: 14px;
-          font-weight: 600;
-          letter-spacing: 0.01em;
-          border: none;
-          cursor: pointer;
-          transition: background 0.15s, transform 0.1s, opacity 0.15s;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-        }
-        .btn-primary:hover { background: #1d4ed8; }
-        .btn-primary:active { transform: scale(0.98); }
-        .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
-
-        .btn-danger {
-          width: 100%;
-          padding: 11px 16px;
-          border-radius: 12px;
-          background: #DC2626;
-          color: #fff;
-          font-size: 14px;
-          font-weight: 600;
-          letter-spacing: 0.01em;
-          border: none;
-          cursor: pointer;
-          transition: background 0.15s, transform 0.1s, opacity 0.15s;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 6px;
-        }
-        .btn-danger:hover { background: #b91c1c; }
-        .btn-danger:active { transform: scale(0.98); }
-        .btn-danger:disabled { opacity: 0.45; cursor: not-allowed; }
-
-        .table-head {
-          padding: 8px 0;
-          font-size: 11px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: #94a3b8;
-        }
-      `}</style>
-        </div>
-    );
-}
-
-// ── Reusable card section ─────────────────────────────────────────────────────
-function Section({ icon, title, subtitle, badge, children }: any) {
-    return (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="flex items-center gap-2.5 px-5 py-4 border-b border-slate-100">
-                {icon}
-                <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-[#0F1B3C] text-sm">{title}</p>
-                    {subtitle && (
-                        <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>
-                    )}
-                </div>
-                {badge}
-            </div>
-            <div className="p-5">{children}</div>
+            {/* ── Footer ──────────────────────────────────────────────── */}
+            <footer className="text-center text-xs text-slate-400 py-6">
+                CDS Queue System · Internal use only · Eti-Osa III LGA
+            </footer>
         </div>
     );
 }
