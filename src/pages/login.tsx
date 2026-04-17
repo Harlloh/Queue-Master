@@ -26,13 +26,15 @@ export default function LoginPage() {
         setErrorMsg("");
 
         try {
-            // ── Uncomment when backend is ready ──
             const loggedIn = await login(email, password);
 
-            console.log(loggedIn)
-            if (loggedIn) { navigate("/admin-dashboard"); }
-            setStatus('error')
-            setErrorMsg('Something went wrong')
+            if (!loggedIn.success) {
+                setStatus('error');
+                setErrorMsg(loggedIn.error || 'Something went wrong');
+                return;
+            }
+
+            navigate("/admin-dashboard");
         } catch (err: any) {
             const msg = err.response?.data?.message;
             setErrorMsg(msg ?? "Invalid credentials. Try again.");

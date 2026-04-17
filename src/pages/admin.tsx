@@ -33,7 +33,7 @@ type Record = { id: number; number: number; name: string; stateCode: string; tim
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function AdminPage() {
-    const { setAdmin } = useAuth()
+    const { setAdmin, setIsAuthenticated } = useAuth()
     // ── Session ──
     const [sessionOpen, setSessionOpen] = useState(false);
     const [lga, setLga] = useState("");
@@ -119,6 +119,7 @@ export default function AdminPage() {
         const res = await api.get('/auth/logout');
         if (res.data.success) {
             setAdmin(null)
+            setIsAuthenticated(false)
             navigate('/admin-login')
         }
     }

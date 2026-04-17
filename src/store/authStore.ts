@@ -13,11 +13,12 @@ export type SessionType = {
 }
 interface AuthType {
     isAuthenticated: boolean,
-    login: (email: string, password: string) => Promise<boolean>;
+    login: (email: string, password: string) => Promise<Boolean | any>;
     admin: AdminType | null;
     session: SessionType | null,
     setAdmin: (admin: AdminType | null) => void;
-    setSession: (session: SessionType | null) => void
+    setSession: (session: SessionType | null) => void;
+    setIsAuthenticated: (value: boolean) => void;
 }
 export const useAuth = create<AuthType>()(
     persist(
@@ -27,6 +28,7 @@ export const useAuth = create<AuthType>()(
             session: null,
             setAdmin: (admin) => set({ admin, isAuthenticated: !admin }),
             setSession: (session) => set({ session }),
+            setIsAuthenticated: (value) => set({ isAuthenticated: value }),
 
             login: async (email: string, password: string) => {
                 try {
@@ -34,12 +36,12 @@ export const useAuth = create<AuthType>()(
                     console.log(res);
                     if (res.data.success) {
                         set({ admin: res.data.admin, isAuthenticated: res.data.success });
-                        return true;
+                        return res.data;
                     }
                     return res.data
                 } catch (error) {
                     console.error('Login error:', error);
-                    return false;
+                    throw error;
                 }
             }
         }),

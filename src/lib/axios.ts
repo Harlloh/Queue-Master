@@ -58,6 +58,7 @@ api.interceptors.response.use(
         const recoverableError = ['NO_ACCESS_TOKEN']
 
         if (recoverableError.includes(errorCode) && !originalRequest._retry) {
+            originalRequest._retry = true;
             if (isRefreshing) {
                 return new Promise((resolve, reject) => {
                     failedQueue.push({ resolve, reject });
@@ -70,38 +71,37 @@ api.interceptors.response.use(
                     });
             }
 
+            isRefreshing = true;
+            try {
+                console.log('Attempting to refresh access token...');
+
+                // Call refresh endpoint - it sets new httpOnly cookie
+                await api.get('/auth/refresh');
+
+                console.log('Token refreshed successfully');
+
+                // Process queued requests
+                processQueue(null);
+                isRefreshing = false;
+
+                // Retry original request with new cookie
+                return api(originalRequest);
+
+            } catch (refreshError) {
+                console.error('Refresh failed:', refreshError);
+
+                // Reject all queued requests
+                processQueue(refreshError);
+                isRefreshing = false;
+
+                // Handle logout
+                handleLogout();
+
+                return Promise.reject(refreshError);
+            }
         }
 
-        originalRequest._retry = true;
-        isRefreshing = true;
 
-        try {
-            console.log('Attempting to refresh access token...');
-
-            // Call refresh endpoint - it sets new httpOnly cookie
-            await api.post('/auth/refresh');
-
-            console.log('Token refreshed successfully');
-
-            // Process queued requests
-            processQueue(null);
-            isRefreshing = false;
-
-            // Retry original request with new cookie
-            return api(originalRequest);
-
-        } catch (refreshError) {
-            console.error('Refresh failed:', refreshError);
-
-            // Reject all queued requests
-            processQueue(refreshError);
-            isRefreshing = false;
-
-            // Handle logout
-            handleLogout();
-
-            return Promise.reject(refreshError);
-        }
 
         return Promise.reject(error);
 
