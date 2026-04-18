@@ -6,6 +6,13 @@ export type AdminType = {
     id: string;
     name: string;
     email: string;
+    lgaDetails: {
+        name: string,
+        latitude: number
+        longitude: number
+        radius: number
+        updatedAt: string
+    }
 }
 export type SessionType = {
     id: string;
@@ -26,7 +33,7 @@ export const useAuth = create<AuthType>()(
             isAuthenticated: false,
             admin: null,
             session: null,
-            setAdmin: (admin) => set({ admin, isAuthenticated: !admin }),
+            setAdmin: (value) => set({ admin: value }),
             setSession: (session) => set({ session }),
             setIsAuthenticated: (value) => set({ isAuthenticated: value }),
 
