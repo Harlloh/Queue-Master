@@ -1,15 +1,11 @@
 import { useState, useEffect } from "react";
 import {
-    MdLocationOn,
-    MdLocationOff,
     MdCheckCircle,
     MdError,
-    MdLock,
     MdAccessTime,
 } from "react-icons/md";
 import StateCard from "../comonents/stateCard";
 import { useParams } from "react-router-dom";
-import api from '../lib/axios'
 import type { SessionInterface } from "../lib/utils";
 // ─── Possible UI states ───────────────────────────────────────────────────────
 // "loading"       → fetching session info + verifying location

@@ -12,11 +12,17 @@ export type AdminType = {
         longitude: number
         radius: number
         updatedAt: string
+        activeCdsGroup?: string[]
     }
 }
 export type SessionType = {
     id: string;
     urlString: string;
+    sessionOpen: boolean;
+    cdsGroupId: string;
+    cdsGroupName: string;
+    lgaId: string;
+    openedAt: string;
 }
 interface AuthType {
     isAuthenticated: boolean,
