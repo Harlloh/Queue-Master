@@ -6,6 +6,8 @@ import LoginPage from "./pages/login"
 import ProtectedRoute from "./comonents/protectedRoute"
 import AdminSystemCOnfigScreen from "./comonents/adminSystemConfig"
 import AdminLayout from "./comonents/adminLayout"
+import SessionPage from "./comonents/session"
+import AttendancePage from "./comonents/attendance"
 
 function App() {
   const router = createBrowserRouter([
@@ -25,18 +27,9 @@ function App() {
         </ProtectedRoute>
       ),
       children: [
-        {
-          index: true,
-          element: <AdminPage />
-        },
-        {
-          path: "dashboard",
-          element: <AdminPage />
-        },
-        {
-          path: "system-config",
-          element: <AdminSystemCOnfigScreen />
-        }
+        { index: true, element: <SessionPage /> },
+        { path: 'attendance', element: <AttendancePage /> },
+        { path: 'settings', element: <AdminSystemCOnfigScreen /> },
       ]
     },
 

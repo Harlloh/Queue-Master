@@ -13,11 +13,11 @@ export type AdminType = {
         radius: number
         updatedAt: string
         activeCdsGroup?: string[]
+        checkInSlug?: string;
     }
 }
 export type SessionType = {
     id: string;
-    urlString: string;
     sessionOpen: boolean;
     cdsGroupId: string;
     cdsGroupName: string;

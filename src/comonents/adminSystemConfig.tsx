@@ -1,99 +1,119 @@
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import AdminCard from "./adminCard";
 import Input from "./inputField";
 import Label from "./label";
 import { MdMyLocation, MdSave, MdSettings } from "react-icons/md";
 import { useAuth } from "../store/authStore";
 import api from "../lib/axios";
-import { useNavigate } from "react-router-dom";
-import Feedback from "./toast";
+import toast from "react-hot-toast";
 
-function AdminSystemCOnfigScreen() {
-    const { setAdmin, setIsAuthenticated, admin } = useAuth()
-    const navigate = useNavigate()
+type FormDataType = {
+    name: string;
+    lat: number | undefined;
+    lng: number | undefined;
+    radius: number | undefined;
+}
 
+type UiStateType = {
+    saving: boolean;
+    gettingLocation: boolean;
+    locationGotten: boolean;
+}
 
-    const [configLga, setConfigLga] = useState<string | undefined>(admin?.lgaDetails?.name);
-    const [lat, setLat] = useState<number | undefined>(admin?.lgaDetails?.latitude);
-    const [lng, setLng] = useState<number | undefined>(admin?.lgaDetails?.longitude);
-    const [radius, setRadius] = useState<number | undefined>(admin?.lgaDetails?.radius);
-    const [configMsg, setConfigMsg] = useState("");
-    const [configError, setConfigError] = useState("");
-    const [isLocation, setLocationGotten] = useState<Boolean>(false);
-    const [gettingLocation, setGettingLocation] = useState(false);
+function AdminSystemConfigScreen() {
+    const { setAdmin, admin } = useAuth();
 
+    const [formData, setFormData] = useState<FormDataType>({
+        name: admin?.lgaDetails?.name ?? '',
+        lat: admin?.lgaDetails?.latitude ?? undefined,
+        lng: admin?.lgaDetails?.longitude ?? undefined,
+        radius: admin?.lgaDetails?.radius ?? undefined,
+    });
 
+    const [uiState, setUiState] = useState<UiStateType>({
+        saving: false,
+        gettingLocation: false,
+        locationGotten: false,
+    });
+
+    const setUI = (patch: Partial<UiStateType>) =>
+        setUiState(prev => ({ ...prev, ...patch }));
+
+    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
 
     const useCurrentLocation = () => {
         if (!navigator.geolocation) {
-            setConfigError("'Location permission required. Allow permission and refresh the page'");
-            return
-        };
-        setGettingLocation(true);
+            toast.error('Location permission required. Allow permission and refresh the page');
+            return;
+        }
+        setUI({ gettingLocation: true });
         navigator.geolocation.getCurrentPosition(
             (pos) => {
-                setLat(parseFloat(pos.coords.latitude.toFixed(6)));
-                setLng(parseFloat(pos.coords.longitude.toFixed(6)));
-                setLocationGotten(true)
-                setGettingLocation(false);
-                setTimeout(() => setLocationGotten(false), 5000);
+                setFormData(prev => ({
+                    ...prev,
+                    lat: parseFloat(pos.coords.latitude.toFixed(6)),
+                    lng: parseFloat(pos.coords.longitude.toFixed(6)),
+                }));
+                setUI({ gettingLocation: false, locationGotten: true });
+                toast.success('Location retrieved successfully.');
+                setTimeout(() => setUI({ locationGotten: false }), 5000);
             },
             (error) => {
-                setGettingLocation(false);
-                setConfigError("'Location permission denied. Allow permission and refresh the page'");
-                console.log('Error getting location: ', error);
+                setUI({ gettingLocation: false });
+                toast.error('Location permission denied. Allow permission and refresh the page');
+                console.error(error);
             }
         );
-        setGettingLocation(true);
     };
 
     const saveConfig = async () => {
-        setConfigError("");
-        setConfigMsg("");
-        const r = (radius);
-        if (configLga && !configLga.trim() || !lat || !lng) {
-            setConfigError("All fields are required.");
-            return;
-        }
-        if (r! < 50 || r! > 1000) {
-            setConfigError("Radius must be between 50 m and 1000 m.");
-            return;
-        }
-        setTimeout(() => {
-            setConfigMsg("Location settings saved successfully.");
-        }, 5000);
+        const { name, lat, lng, radius } = formData;
 
-        const payload = {
-            radius: radius,
-            latitude: lat,
-            longitude: lng,
-            name: configLga
+        if (!name?.trim() || !lat || !lng) {
+            toast.error('All fields are required.');
+            return;
         }
-        console.log(payload)
+        if (!radius || radius < 50 || radius > 1000) {
+            toast.error('Radius must be between 50 m and 1000 m.');
+            return;
+        }
+
+        setUI({ saving: true });
         try {
-            const res = await api.post('/admin/update-lga', payload)
-            console.log(res.data);
+            const res = await api.post('/admin/update-lga', {
+                radius: Number(radius),
+                latitude: lat,
+                longitude: lng,
+                name,
+            });
             if (res.data.success) {
                 const lga = res.data.lga;
                 setAdmin({
-                    ...admin!, // spread existing admin fields (id, name, email)
+                    ...admin!,
                     lgaDetails: {
                         name: lga.name,
                         latitude: lga.latitude,
                         longitude: lga.longitude,
                         radius: lga.radius,
                         updatedAt: lga.updatedAt,
+                        checkInSlug: lga.checkInSlug,
                     }
                 });
+                toast.success('Location settings saved successfully.');
             }
         } catch (error) {
-            setTimeout(() => {
-                setConfigError("Failed to save location settings. Please try again.");
-            }, 5000);
+            toast.error('Failed to save location settings. Please try again.');
             console.error(error);
+        } finally {
+            setUI({ saving: false });
         }
     };
-
 
     return (
         <main className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-5">
@@ -107,8 +127,9 @@ function AdminSystemCOnfigScreen() {
                         <Label>LGA Name</Label>
                         <Input
                             placeholder="e.g. Ikeja"
-                            value={configLga}
-                            onChange={(e) => setConfigLga(e.target.value)}
+                            name="name"
+                            value={formData.name}
+                            onChange={handleChange}
                         />
                     </div>
 
@@ -117,8 +138,9 @@ function AdminSystemCOnfigScreen() {
                             <Label>Latitude</Label>
                             <Input
                                 placeholder="e.g. 6.6018"
-                                value={lat}
-                                onChange={(e) => setLat(parseFloat(e.target.value))}
+                                name="lat"
+                                value={formData.lat}
+                                onChange={handleChange}
                                 disabled
                             />
                         </div>
@@ -126,8 +148,9 @@ function AdminSystemCOnfigScreen() {
                             <Label>Longitude</Label>
                             <Input
                                 placeholder="e.g. 3.3515"
-                                value={lng}
-                                onChange={(e) => setLng(parseFloat(e.target.value))}
+                                name="lng"
+                                value={formData.lng}
+                                onChange={handleChange}
                                 disabled
                             />
                         </div>
@@ -139,35 +162,52 @@ function AdminSystemCOnfigScreen() {
                             type="number"
                             min={50}
                             max={1000}
-                            value={radius}
-                            onChange={(e) => setRadius(parseInt(e.target.value))}
+                            name="radius"
+                            value={formData.radius}
+                            onChange={handleChange}
                         />
                         <p className="text-[11px] text-slate-400 mt-1">Between 50 m and 1000 m</p>
                     </div>
 
-                    {configError && <Feedback type="error" message={configError} />}
-                    {configMsg && <Feedback type="success" message={configMsg} />}
-                    {isLocation && <Feedback type="success" message={"Location gotten successfully"} />}
-
                     <button
                         onClick={useCurrentLocation}
-                        disabled={gettingLocation}
-                        className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-600 font-semibold hover:bg-slate-50 active:scale-[0.98] transition"
+                        disabled={uiState.gettingLocation}
+                        className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-600 font-semibold hover:bg-slate-50 active:scale-[0.98] transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {!gettingLocation && <MdMyLocation className="text-[#2b7234] text-base" />} {gettingLocation ? 'Please wait...' : lat && lng ? 'Update Location' : 'Get Location'}
+                        {uiState.gettingLocation ? (
+                            <>
+                                <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+                                Getting location...
+                            </>
+                        ) : (
+                            <>
+                                <MdMyLocation className="text-[#2b7234] text-base" />
+                                {formData.lat && formData.lng ? 'Update Location' : 'Get Location'}
+                            </>
+                        )}
                     </button>
 
                     <button
                         onClick={saveConfig}
-                        className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#2b7234] hover:bg-[#153619] text-white text-sm font-bold transition-all active:scale-[0.98]"
+                        disabled={uiState.saving}
+                        className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#2b7234] hover:bg-[#153619] text-white text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <MdSave className="text-base" /> Save Settings
+                        {uiState.saving ? (
+                            <>
+                                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Saving...
+                            </>
+                        ) : (
+                            <>
+                                <MdSave className="text-base" />
+                                Save Settings
+                            </>
+                        )}
                     </button>
                 </div>
             </AdminCard>
         </main>
-
     );
 }
 
-export default AdminSystemCOnfigScreen;
+export default AdminSystemConfigScreen;

@@ -1,4 +1,4 @@
-import { MdLink, MdLock, MdLogout } from "react-icons/md";
+import { MdLock, MdLogout } from "react-icons/md";
 import { useAuth } from "../store/authStore";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/axios";
@@ -6,6 +6,7 @@ import api from "../lib/axios";
 function AdminNav() {
     const { session, setAdmin, setSession, setIsAuthenticated, admin } = useAuth()
     const navigate = useNavigate()
+    const baseUrl = window.location.origin
 
     const handleLogOut = async () => {
         const res = await api.get('/auth/logout');
@@ -54,6 +55,25 @@ function AdminNav() {
                     {/* <span className="ml-auto text-xs text-slate-500 font-medium">
                         {records.length} checked in
                     </span> */}
+                </div>
+            )}
+            {admin?.lgaDetails?.checkInSlug && (
+                <div className="mx-5 my-3 flex items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl px-4 py-3">
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Check-in link</span>
+                        <Link
+                            to={`/${admin.lgaDetails.checkInSlug}`}
+                            className="text-xs font-semibold text-[#2b7234] underline underline-offset-2 truncate"
+                        >
+                            {`${baseUrl}/${admin.lgaDetails.checkInSlug}`}
+                        </Link>
+                    </div>
+                    <button
+                        onClick={() => navigator.clipboard.writeText(`${baseUrl}/${admin.lgaDetails.checkInSlug}`)}
+                        className="shrink-0 text-[10px] font-semibold text-slate-500 border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-slate-50 active:scale-[0.97] transition"
+                    >
+                        Copy
+                    </button>
                 </div>
             )}
         </>

@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
     const { admin } = useAuth()
-    console.log(admin);
 
     if (!admin) {
         return <Navigate to='/admin-login' replace />
