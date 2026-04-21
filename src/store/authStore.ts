@@ -12,7 +12,6 @@ export type AdminType = {
         longitude: number
         radius: number
         updatedAt: string
-        activeCdsGroup?: string[]
         checkInSlug?: string;
     }
 }

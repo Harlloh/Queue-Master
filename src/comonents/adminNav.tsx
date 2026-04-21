@@ -50,7 +50,7 @@ function AdminNav() {
                 <div className="bg-[#2b7234]/8 border-b border-[#2b7234]/15 px-5 py-2.5 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-[#25eb2f] animate-pulse shrink-0" />
                     <p className="text-xs font-semibold text-[#2b7234]">
-                        Active session — {admin?.lgaDetails.name} · {admin?.lgaDetails.activeCdsGroup}
+                        Active session — {admin?.lgaDetails.name}
                     </p>
                     {/* <span className="ml-auto text-xs text-slate-500 font-medium">
                         {records.length} checked in

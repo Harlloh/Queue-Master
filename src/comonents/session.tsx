@@ -7,13 +7,14 @@ import { useEffect, useState } from "react";
 import Feedback from "./toast";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import api from "../lib/axios";
 
 function SessionPage() {
-    const { session, admin } = useAuth()
+    const { session, admin, setSession } = useAuth()
     const navigate = useNavigate()
 
 
-    const [sessionOpen, setSessionOpen] = useState(session?.sessionOpen);
+    const sessionOpen = session?.sessionOpen;
 
 
 
@@ -31,15 +32,25 @@ function SessionPage() {
         }
     }, [])
 
-    const openSession = () => {
+    const openSession = async () => {
         // setSessionLga(lga);
         // setSessionCds(cdsGroup);
-        setSessionOpen(true);
-        // setRecords(SEED_RECORDS); // seed for preview; remove in prod
+        console.log(!sessionOpen);
+        try {
+            const res = await api.post('/admin/open-session', { sessionOpen: !sessionOpen })
+            if (res.data.success) {
+                setSession(res.data.session);
+                toast.success('Session opened successfully');
+            }
+        } catch (error: any) {
+            toast.error(error.message)
+            console.log('Something went wrong openiing session', error.message);
+        }
     };
 
     const closeSession = () => {
-        setSessionOpen(false);
+        setSession(null);
+        console.log(!sessionOpen);
         // setRecords([]);
     };
 
