@@ -28,7 +28,7 @@ function AdminNav() {
                     </div>
                     <div>
                         <span className="font-bold text-sm tracking-widest uppercase">CDS Admin</span>
-                        {session?.sessionOpen && (
+                        {session?.isOpen && (
                             <span className="ml-2.5 text-[10px] font-semibold text-[#25eb2f] bg-[#25eb2f]/10 border border-[#25eb2f]/20 px-2 py-0.5 rounded-full uppercase tracking-widest align-middle">
                                 Session Open
                             </span>
@@ -46,7 +46,7 @@ function AdminNav() {
             </header>
 
             {/* ── Session banner (visible when open) ──────────────────── */}
-            {session?.sessionOpen && (
+            {session?.isOpen && (
                 <div className="bg-[#2b7234]/8 border-b border-[#2b7234]/15 px-5 py-2.5 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-[#25eb2f] animate-pulse shrink-0" />
                     <p className="text-xs font-semibold text-[#2b7234]">

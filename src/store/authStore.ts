@@ -17,7 +17,7 @@ export type AdminType = {
 }
 export type SessionType = {
     id: string;
-    sessionOpen: boolean;
+    isOpen: boolean;
     cdsGroupId: string;
     cdsGroupName: string;
     lgaId: string;
@@ -47,7 +47,11 @@ export const useAuth = create<AuthType>()(
                     const res = await api.post('/auth/login', { email, password });
                     console.log(res);
                     if (res.data.success) {
-                        set({ admin: res.data.admin, isAuthenticated: res.data.success });
+                        set({
+                            admin: res.data.admin,
+                            isAuthenticated: res.data.success,
+                            session: res.data.admin.sessionDetails,
+                        });
                         return res.data;
                     }
                     return res.data

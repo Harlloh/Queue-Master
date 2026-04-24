@@ -34,7 +34,7 @@ export default function LoginPage() {
                 return;
             }
 
-            navigate("/admin");
+            navigate("/admin/settings");
         } catch (err: any) {
             const msg = err.response?.data?.message;
             setErrorMsg(msg ?? "Invalid credentials. Try again.");
