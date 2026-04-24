@@ -14,14 +14,10 @@ function SessionPage() {
     const navigate = useNavigate()
 
 
-
-
-
-
-
     const [manualName, setManualName] = useState("");
     const [manualCode, setManualCode] = useState("");
     const [assignMsg, setAssignMsg] = useState("");
+    const [loading, setLoading] = useState({ open: false, close: false, assign: false });
 
 
     useEffect(() => {
@@ -33,48 +29,89 @@ function SessionPage() {
 
     const openSession = async () => {
         console.log(!session?.isOpen);
+        setLoading(prev => ({ ...prev, open: true }));
+
         try {
-            const res = await api.get('/admin/open-session')
+            const res = await api.post('/admin/open-session', { sessionId: session?.id })
             if (res.data.success) {
                 setSession(res.data.session);
                 toast.success('Session opened successfully');
             }
 
         } catch (error: any) {
+            const message = error?.response?.data?.message;
+            const session = error?.response?.data?.session;
+
+            if (message === 'You already have an open session' && session) {
+                setSession(session);
+                toast.error('You already have an open session');
+                return;
+            }
             toast.error(error?.response.data.message)
             console.log('Something went wrong openiing session', error?.response.data.message);
+        } finally {
+            setLoading(prev => ({ ...prev, open: false }));
         }
     };
 
     const closeSession = async () => {
+        setLoading(prev => ({ ...prev, close: true }));
+
         try {
             const res = await api.post('/admin/close-session', { sessionId: session?.id });
-            console.log(res.data);
+
+
             if (!res.data.success) {
                 toast.error(res?.data.message)
+
             }
             setSession(res.data.session)
         }
         catch (error: any) {
-            toast.error(error?.response.data.message)
+            const message = error?.response?.data?.message;
+            const session = error?.response?.data?.session;
+
+            if (message === 'Session is closed already' && session) {
+                setSession(session);
+                toast.error('Session was already closed.');
+                return;
+            }
+            toast.error(message || 'Error closing session, please try again')
             console.log('Something went wrong closing session', error?.response.data.message);
+        }
+        finally {
+            setLoading(prev => ({ ...prev, close: false }));
         }
         // setRecords([]);
     };
 
 
-    const assignManual = () => {
+    const assignManual = async () => {
         if (!manualName.trim() || !manualCode.trim()) return;
-        // const next = records.length + 1;
-        // const now = new Date().toLocaleTimeString("en-NG", { hour: "2-digit", minute: "2-digit" });
-        // setRecords((prev) => [
-        //     ...prev,
-        //     { id: Date.now(), number: next, name: manualName, stateCode: manualCode, time: now },
-        // ]);
-        // setAssignMsg(`Assigned #${String(next).padStart(3, "0")} to ${manualName}`);
-        // setManualName("");
-        // setManualCode("");
-        // setTimeout(() => setAssignMsg(""), 5000);
+
+        const payload = {
+            name: manualName,
+            stateCode: manualCode,
+            sessionId: session?.id
+        }
+        setLoading(prev => ({ ...prev, assing: true }));
+
+        try {
+            const res = await api.post('/admin/assign-number', payload)
+            console.log(res.data);
+            if (!res.data.success) {
+                toast.error(res.data.message || 'error assigning a number manually.')
+            }
+            setManualCode('')
+            setManualName('')
+            toast.success(res.data.message)
+            setAssignMsg(`Queue number: ${res.data.attendance.queueNumber}`)
+        } catch (error: any) {
+            toast.error(error?.response.data.message || 'Error assigning number, please try again')
+            console.log('Something went wrong closing session', error?.response.data.message);
+        } finally {
+            setLoading(prev => ({ ...prev, assign: false }));
+        }
     };
     return (
         <>
@@ -99,17 +136,17 @@ function SessionPage() {
                 <div className="grid grid-cols-2 gap-3">
                     <button
                         onClick={openSession}
-                        disabled={session?.isOpen}
+                        disabled={session?.isOpen || loading.open}
                         className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#2b7234] hover:bg-[#153619] text-white text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                        <MdLockOpen className="text-base" /> Open Session
+                        <MdLockOpen className="text-base" /> {loading.open ? 'Opening...' : 'Open Session'}
                     </button>
                     <button
                         onClick={closeSession}
-                        disabled={!session?.isOpen}
+                        disabled={!session?.isOpen || loading.close}
                         className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                        <MdLock className="text-base" /> Close Session
+                        <MdLock className="text-base" /> {loading.close ? 'Closing...' : 'Close Session'}
                     </button>
                 </div>
             </AdminCard>
@@ -146,13 +183,13 @@ function SessionPage() {
                                 disabled={!session?.isOpen}
                             />
                         </div>
-                        {assignMsg && <Feedback type="success" message={assignMsg} />}
+                        {(assignMsg && session?.isOpen) && <Feedback type="success" message={assignMsg} />}
                         <button
                             onClick={assignManual}
-                            disabled={!session?.isOpen || !manualName.trim() || !manualCode.trim()}
+                            disabled={!session?.isOpen || !manualName.trim() || !manualCode.trim() || loading.assign}
                             className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#2b7234] hover:bg-[#153619] text-white text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                            <MdPersonAdd className="text-base" /> Assign Number
+                            <MdPersonAdd className="text-base" />     {loading.assign ? 'Assigning...' : 'Assign Number'}
                         </button>
                     </div>
                 </AdminCard>

@@ -23,7 +23,7 @@ function AttendancePage() {
                 <div className="py-8 flex flex-col items-center gap-2 text-center">
                     <MdListAlt className="text-3xl text-slate-200" />
                     <p className="text-sm text-slate-400">No check-ins yet.</p>
-                    {!session?.sessionOpen && (
+                    {!session?.isOpen && (
                         <p className="text-xs text-slate-300">Open a session to start.</p>
                     )}
                 </div>
