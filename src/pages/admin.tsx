@@ -18,7 +18,7 @@
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type Record = { id: number; number: number; name: string; stateCode: string; time: string };
+// type Record = { id: number; number: number; name: string; stateCode: string; time: string };
 
 
 
