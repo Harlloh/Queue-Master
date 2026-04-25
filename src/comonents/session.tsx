@@ -94,7 +94,7 @@ function SessionPage() {
             stateCode: manualCode,
             sessionId: session?.id
         }
-        setLoading(prev => ({ ...prev, assing: true }));
+        setLoading(prev => ({ ...prev, assign: true }));
 
         try {
             const res = await api.post('/admin/assign-number', payload)
