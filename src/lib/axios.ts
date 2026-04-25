@@ -4,7 +4,7 @@ import { useAuth } from '../store/authStore';
 const api = axios.create({
     baseURL: window.location.href.includes('localhost')
         ? 'http://localhost:8000'
-        : 'https://bookish-server-s0os.onrender.com',
+        : 'https://attendance-backend-qnf8.onrender.com',
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
