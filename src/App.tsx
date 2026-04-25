@@ -1,6 +1,5 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom"
 import IndexPage from "./pages"
-import AdminPage from "./pages/admin"
 import NotFound from "./pages/notFound"
 import LoginPage from "./pages/login"
 import ProtectedRoute from "./comonents/protectedRoute"
@@ -12,7 +11,7 @@ import AttendancePage from "./comonents/attendance"
 function App() {
   const router = createBrowserRouter([
     {
-      path: '/:sessionId',
+      path: '/:lgaUniqueLink',
       Component: IndexPage
     },
     {

@@ -45,7 +45,7 @@ api.interceptors.response.use(
         }
 
         const errorCode = error.response?.data?.code
-        const status = error.response?.status
+        // const status = error.response?.status
 
         const unrecoverableError = ['NO_TOKEN', 'REFRESH_TOKEN_EXPIRED', 'INVALID_REFRESH_TOKEN'];
         if (unrecoverableError.includes(errorCode)) {
