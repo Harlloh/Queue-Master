@@ -25,10 +25,8 @@ const processQueue = (error: any) => {
 
 
 const handleLogout = () => {
-    const { setAdmin } = useAuth()
-
-    setAdmin(null)
-    window.location.href = '/admin-login'
+    useAuth.getState().logOut();
+    window.location.href = '/admin-login';
 }
 api.interceptors.response.use(
     (response) => response,
@@ -41,12 +39,19 @@ api.interceptors.response.use(
         }
 
         if (originalRequest.url?.includes('/auth/refresh')) {
+            const errorCode = error.response?.data?.code;
+            const unrecoverableError = ['NO_TOKEN', 'REFRESH_TOKEN_EXPIRED', 'INVALID_REFRESH_TOKEN'];
+
+            if (unrecoverableError.includes(errorCode)) {
+                console.log('Unrecoverable auth error from refresh:', errorCode);
+                handleLogout();
+            }
+
             return Promise.reject(error);
         }
 
         const errorCode = error.response?.data?.code
         // const status = error.response?.status
-
         const unrecoverableError = ['NO_TOKEN', 'REFRESH_TOKEN_EXPIRED', 'INVALID_REFRESH_TOKEN'];
         if (unrecoverableError.includes(errorCode)) {
             console.log('Unrecoverable auth error: ', errorCode);

@@ -26,6 +26,7 @@ export type SessionType = {
 interface AuthType {
     isAuthenticated: boolean,
     login: (email: string, password: string) => Promise<Boolean | any>;
+    logOut: () => void;
     admin: AdminType | null;
     session: SessionType | null,
     setAdmin: (admin: AdminType | null) => void;
@@ -59,7 +60,12 @@ export const useAuth = create<AuthType>()(
                     console.error('Login error:', error);
                     throw error;
                 }
-            }
+            },
+            logOut: () => set({
+                session: null,
+                admin: null,
+                isAuthenticated: false
+            })
         }),
         { name: "auth-store" }
     )
