@@ -1,10 +1,6 @@
 {
     "rewrites": [
         {
-            "source": "/api/:path*",
-            "destination": "https://attendance-backend-qnf8.onrender.com/:path*"
-        },
-        {
             "source": "/(.*)",
             "destination": "/"
         }
