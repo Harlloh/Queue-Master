@@ -9,6 +9,10 @@ type ViewState = "loading" | "no_location_access" | "no_session" | "outside" | "
 
 export default function IndexPage() {
     const { lgaUniqueLink } = useParams();
+    const [location, setLocation] = useState({
+        latitude: '',
+        longitude: ''
+    })
 
     const [view, setView] = useState<ViewState>("loading");
     const [form, setForm] = useState({ name: "", stateCode: "" });
@@ -43,26 +47,7 @@ export default function IndexPage() {
             return null;
         }
     };
-
-    const init = async () => {
-        setView("loading");
-
-        const [sessionData, location] = await Promise.all([
-            validateSession(),
-            getLocation(),
-        ]);
-
-        if (!sessionData) {
-            setView("no_session");
-            return;
-        }
-
-        if (!location) {
-            setView("no_location_access");
-            return;
-        }
-
-        // geofence check — backend already knows the LGA coords, just send corper coords
+    const validateLocation = async (location: any) => {
         try {
             const res = await api.get('/user/validateLocation', {
                 params: {
@@ -76,6 +61,30 @@ export default function IndexPage() {
         } catch {
             setView("outside");
         }
+    }
+
+    const init = async () => {
+        setView("loading");
+
+        const [sessionData, location] = await Promise.all([
+            validateSession(),
+            getLocation(),
+        ]);
+
+
+        if (!sessionData) {
+            setView("no_session");
+            return;
+        }
+
+        if (!location) {
+            setView("no_location_access");
+            return;
+        }
+
+        // geofence check — backend already knows the LGA coords, just send corper coords
+        console.log(location, 'Location...')
+        await validateLocation(location)
     };
 
     useEffect(() => {
