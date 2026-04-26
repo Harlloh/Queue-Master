@@ -9,10 +9,9 @@ type ViewState = "loading" | "no_location_access" | "no_session" | "outside" | "
 
 export default function IndexPage() {
     const { lgaUniqueLink } = useParams();
-    const [location, setLocation] = useState({
-        latitude: '',
-        longitude: ''
-    })
+    // const [location, setLocation] = useState({
+    //     longitude: ''
+    // })
 
     const [view, setView] = useState<ViewState>("loading");
     const [form, setForm] = useState({ name: "", stateCode: "" });
