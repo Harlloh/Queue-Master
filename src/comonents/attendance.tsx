@@ -53,7 +53,7 @@ function AttendancePage() {
     const fetchAttendanceList = async () => {
         setLoading(true)
         try {
-            const res = await api.get(`/admin/attendanceList/`, {
+            const res = await api.get(`/admin/attendanceList`, {
                 params: {
                     pageIndex: metaData.pageIndex,
                     pageSize: metaData.pageSize,
