@@ -26,26 +26,29 @@ function AttendancePage() {
         totalCount: 0
     })
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const isInitialMount = useRef(true);
 
     useEffect(() => {
-        if (searchText.trim()) return // don't paginate-fetch while searching
-        fetchAttendanceList()
-    }, [metaData.pageIndex, metaData.pageSize])
+        if (isInitialMount.current) {
+            isInitialMount.current = false
+            fetchAttendanceList()
+            return
+        }
 
-    useEffect(() => {
         if (!searchText.trim()) {
             fetchAttendanceList()
             return
         }
+
         if (debounceRef.current) clearTimeout(debounceRef.current)
         debounceRef.current = setTimeout(() => {
             searchAttendance()
-        }, 500)
+        }, 700)
 
         return () => {
             if (debounceRef.current) clearTimeout(debounceRef.current)
         }
-    }, [searchText])
+    }, [searchText, metaData.pageIndex, metaData.pageSize])
 
     const fetchAttendanceList = async () => {
         setLoading(true)
