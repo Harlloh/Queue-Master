@@ -4,7 +4,7 @@ import { useAuth } from '../store/authStore';
 const api = axios.create({
     baseURL: window.location.href.includes('localhost')
         ? 'http://localhost:8000'
-        : 'https://attendance-backend-qnf8.onrender.com',
+        : '/api',
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json',
@@ -27,7 +27,9 @@ const processQueue = (error: any) => {
 const handleLogout = () => {
     useAuth.getState().logOut();
     window.location.href = '/admin-login';
-}
+};
+
+
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
