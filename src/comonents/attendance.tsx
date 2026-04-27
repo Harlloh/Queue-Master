@@ -67,6 +67,7 @@ function AttendancePage() {
                 totalCount: res.data.totalCount
             }))
         } catch (error: any) {
+            console.log('error from fetching attendance list', error);
             toast.error(error?.response?.data?.message || 'Error fetching attendance list')
         } finally {
             setLoading(false)
@@ -84,6 +85,7 @@ function AttendancePage() {
             })
             setRecords(res.data.results)
         } catch (error: any) {
+            console.log('error from searching attendance list', error);
             toast.error(error?.response?.data?.message || 'Search failed')
         } finally {
             setIsSearching(false)
@@ -139,7 +141,7 @@ function AttendancePage() {
 
                 {loading || isSearching ? (
                     <div className="py-8 flex justify-center text-sm text-slate-400">Loading...</div>
-                ) : displayRecords.length === 0 ? (
+                ) : displayRecords?.length === 0 ? (
                     <div className="py-8 flex flex-col items-center gap-2 text-center">
                         <MdListAlt className="text-3xl text-slate-200" />
                         <p className="text-sm text-slate-400">
