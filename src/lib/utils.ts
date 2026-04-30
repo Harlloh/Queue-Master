@@ -109,5 +109,6 @@ export const CARD_STATES: Record<string, any> = {
 
 export interface SessionInterface {
     lga: string,
-    cdsGroup: string
+    cdsGroup: string,
+    id: string
 }

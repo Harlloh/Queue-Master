@@ -4,39 +4,53 @@ import StateCard from "../comonents/stateCard";
 import { useParams } from "react-router-dom";
 // import type { SessionInterface } from "../lib/utils";
 import api from "../lib/axios";
+import { Thumbmark } from "@thumbmarkjs/thumbmarkjs";
+import toast from "react-hot-toast";
 
 type ViewState = "loading" | "no_location_access" | "no_session" | "outside" | "error" | "form" | "success" | "already_in" | "poor_gps";
 
 export default function IndexPage() {
+
+    const [thumbmark, setThumbmark] = useState('');
+
+    useEffect(() => {
+        const tm = new Thumbmark;
+        tm.get()
+            .then((result) => {
+                setThumbmark(result.thumbmark);
+            })
+            .catch((error) => {
+                console.error('Error getting fingerprint:', error);
+            });
+    }, []);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     const { lgaUniqueLink } = useParams();
     // const [location, setLocation] = useState({
     //     longitude: ''
     // })
 
-    const [view, setView] = useState<ViewState>("loading");
+    const [view, setView] = useState<ViewState>("form");
     const [form, setForm] = useState({ name: "", stateCode: "" });
     const [submitting, setSubmitting] = useState(false);
-    // const [sessionInfo, setSessionInfo] = useState<SessionInterface | null>(null);
     const [queueNumber, setQueueNumber] = useState<number | null>(null);
     const [checkedInAt, setCheckedInAt] = useState<string | null>(null);
     const [error, setError] = useState("");
 
-    // const getLocation = (): Promise<{ latitude: number; longitude: number; accuracy: number } | null> => {
-    //     return new Promise((resolve) => {
-    //         if (!navigator.geolocation) {
-    //             resolve(null);
-    //             return;
-    //         }
-
-    //         navigator.geolocation.getCurrentPosition(
-    //             (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: pos.coords.accuracy }),
-    //             () => resolve(null),
-    //             { maximumAge: 0, enableHighAccuracy: true }
-    //         );
-    //     });
-    // };
-
     const ACCURACY_THRESHOLD = 100; // metres
+    // const ACCURACY_THRESHOLD = 100; // metres
     const TIMEOUT = 15000; // max wait time
     const getLocation = (): Promise<{ latitude: number; longitude: number; accuracy: number } | { denied: true } | null> => {
 
@@ -83,6 +97,7 @@ export default function IndexPage() {
             const res = await api.get('/user/validateSession', {
                 params: { checkInSlug: lgaUniqueLink }
             });
+            console.log(res.data);
             // setSessionInfo(res.data.session);
             return res.data;
         } catch (error) {
@@ -145,27 +160,35 @@ export default function IndexPage() {
             setView("no_session");
             return;
         }
-        init();
+        // init();
     }, [lgaUniqueLink]);
 
     const handleSubmit = async () => {
+        console.log(thumbmark);
         if (!form.name.trim() || !form.stateCode.trim()) {
             setError("Please fill in both fields.");
             return;
         }
+        if (!thumbmark) {
+            toast.error('Unique identifier has not been generated yet')
+            return
+        };
+
         setError("");
         setSubmitting(true);
         try {
             // TODO: send fingerprint here too
-            const res = await api.post('/user/checkin', {
+            const res = await api.post('/user/getNumber', {
                 checkInSlug: lgaUniqueLink,
                 name: form.name,
                 stateCode: form.stateCode,
+                browserId: thumbmark,
             });
             setQueueNumber(res.data.queueNumber);
             setCheckedInAt(res.data.checkedInAt);
-            setView("success");
+            setView(res.data.status);
         } catch (err: any) {
+            setView(err.response.data.status)
             setError(err?.response?.data?.message || "Something went wrong.");
         } finally {
             setSubmitting(false);
@@ -184,7 +207,7 @@ export default function IndexPage() {
             </div>
 
             <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                {["loading", "no_location_access", "no_session", "outside", "poor_gps"].includes(view) && (
+                {["loading", "no_location_access", "no_session", "outside", "poor_gps", 'error'].includes(view) && (
                     <StateCard state={view} onRetry={init} />
                 )}
 

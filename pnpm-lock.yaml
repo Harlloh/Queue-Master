@@ -11,6 +11,9 @@ importers:
       '@tailwindcss/vite':
         specifier: ^4.2.2
         version: 4.2.2(vite@8.0.8(@types/node@24.12.2)(jiti@2.6.1))
+      '@thumbmarkjs/thumbmarkjs':
+        specifier: ^1.8.1
+        version: 1.8.1
       axios:
         specifier: ^1.15.0
         version: 1.15.0
@@ -414,6 +417,9 @@ packages:
     resolution: {integrity: sha512-mEiF5HO1QqCLXoNEfXVA1Tzo+cYsrqV7w9Juj2wdUFyW07JRenqMG225MvPwr3ZD9N1bFQj46X7r33iHxLUW0w==}
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7 || ^8
+
+  '@thumbmarkjs/thumbmarkjs@1.8.1':
+    resolution: {integrity: sha512-9cX/mC9gC0a4Kr2ZSPO9MR9azangLiD0ANQmvQ/YCqBuinT56phyYg5u97+f5IYx9/4BH9qOXj0oyAnoxrJorA==}
 
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
@@ -1590,6 +1596,8 @@ snapshots:
       '@tailwindcss/oxide': 4.2.2
       tailwindcss: 4.2.2
       vite: 8.0.8(@types/node@24.12.2)(jiti@2.6.1)
+
+  '@thumbmarkjs/thumbmarkjs@1.8.1': {}
 
   '@tybys/wasm-util@0.10.1':
     dependencies:
