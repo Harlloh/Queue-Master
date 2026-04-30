@@ -48,10 +48,10 @@ export const CARD_STATES: Record<string, any> = {
     },
     poor_gps: {
         icon: React.createElement(MdLocationOff, { className: "text-5xl text-amber-500" }),
-        title: "You're gps location is poor",
-        message: "Your device location gps has a low accuracy, change location and try again with 10-15s.",
+        title: "Weak GPS Signal",
+        message: "Your location accuracy is too low to verify your position. Step outside, wait a few seconds, then retry.",
         button: {
-            text: "Retry location check",
+            text: "Retry",
             action: "retry",
         },
         showSpinner: false,
