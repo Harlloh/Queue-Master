@@ -36,13 +36,13 @@ export default function IndexPage() {
     //     });
     // };
 
+    const ACCURACY_THRESHOLD = 100; // metres
+    const TIMEOUT = 15000; // max wait time
     const getLocation = (): Promise<{ latitude: number; longitude: number; accuracy: number } | { denied: true } | null> => {
 
         return new Promise((resolve) => {
             if (!navigator.geolocation) { resolve(null); return; }
 
-            const ACCURACY_THRESHOLD = 50; // metres
-            const TIMEOUT = 15000; // max wait time
 
             let watchId: number;
             let settled = false;
@@ -130,7 +130,7 @@ export default function IndexPage() {
             return;
         }
 
-        if (location.accuracy > 100) {
+        if (location.accuracy > ACCURACY_THRESHOLD) {
             setView('poor_gps'); // got a reading but it's bad — retry makes sense
             return;
         }
