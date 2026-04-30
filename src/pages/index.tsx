@@ -36,7 +36,9 @@ export default function IndexPage() {
     //     });
     // };
 
-    const getLocation = (): Promise<{ latitude: number; longitude: number; accuracy: number } | null> => {
+    const getLocation = (): Promise<{ latitude: number; longitude: number; accuracy: number } | { denied: true } | null> => {
+        let locationDenied = false;
+
         return new Promise((resolve) => {
             if (!navigator.geolocation) { resolve(null); return; }
 
@@ -67,7 +69,13 @@ export default function IndexPage() {
                         done({ latitude, longitude, accuracy });
                     }
                 },
-                () => { clearTimeout(timer); done(null); },
+                (err) => {
+                    clearTimeout(timer);
+                    if (err.code === err.PERMISSION_DENIED) {
+                        locationDenied = true;
+                    }
+                    done(null);
+                },
                 { maximumAge: 0, enableHighAccuracy: true }
             );
         });
@@ -108,7 +116,7 @@ export default function IndexPage() {
             validateSession(),
             getLocation(),
         ]);
-
+        console.log(location, 'location');
 
         if (!sessionData) {
             setView("no_session");
@@ -116,13 +124,18 @@ export default function IndexPage() {
         }
 
         if (!location) {
-            setView("no_location_access");
+            setView("poor_gps"); // timeout — show retry
             return;
         }
+
+        if ('denied' in location) {
+            setView("no_location_access"); // permission denied — tell them to fix settings, no retry button
+            return;
+        }
+
         if (location.accuracy > 100) {
-            setView('poor_gps')
-            console.log(location.accuracy);
-            return
+            setView('poor_gps'); // got a reading but it's bad — retry makes sense
+            return;
         }
 
         // geofence check — backend already knows the LGA coords, just send corper coords

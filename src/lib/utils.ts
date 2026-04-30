@@ -24,8 +24,8 @@ export const CARD_STATES: Record<string, any> = {
     },
     no_location_access: {
         icon: React.createElement(MdLocationOff, { className: "text-5xl text-rose-500" }),
-        title: "Attendance Location access required",
-        message: "Location access is required. Please allow location in your browser.",
+        title: "Location access required",
+        message: "Location access was denied. To fix this: tap the lock icon in your browser's address bar → Site Settings → Allow Location, then refresh the page",
         button: null,
         showSpinner: false,
     },
