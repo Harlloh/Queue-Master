@@ -53,6 +53,7 @@ export default function IndexPage() {
                     checkInSlug: lgaUniqueLink,
                     latitude: location.latitude,
                     longitude: location.longitude,
+                    accuracy: location.accuracy
                 }
             });
 
@@ -82,6 +83,7 @@ export default function IndexPage() {
         }
         if (location.accuracy > 100) {
             setView('poor_gps')
+            return
         }
 
         // geofence check — backend already knows the LGA coords, just send corper coords
