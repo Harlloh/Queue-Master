@@ -37,9 +37,9 @@ export default function IndexPage() {
     // };
 
     const getLocation = (): Promise<{ latitude: number; longitude: number; accuracy: number } | { denied: true } | null> => {
-        let locationDenied = false;
 
         return new Promise((resolve) => {
+            let locationDenied = false;
             if (!navigator.geolocation) { resolve(null); return; }
 
             const ACCURACY_THRESHOLD = 50; // metres
