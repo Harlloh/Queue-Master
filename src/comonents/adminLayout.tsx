@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
 import AdminNav from "./adminNav";
-import AdminFooter from "./adminFooter";
+// import AdminFooter from "./adminFooter";
 import SidebarItem from "./siebarItem";
 import TabBarItem from "./tabBarItem";
 import { MdBolt, MdListAlt, MdSettings } from "react-icons/md";
