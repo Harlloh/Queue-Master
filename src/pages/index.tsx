@@ -39,7 +39,6 @@ export default function IndexPage() {
     const getLocation = (): Promise<{ latitude: number; longitude: number; accuracy: number } | { denied: true } | null> => {
 
         return new Promise((resolve) => {
-            let locationDenied = false;
             if (!navigator.geolocation) { resolve(null); return; }
 
             const ACCURACY_THRESHOLD = 50; // metres
@@ -71,10 +70,8 @@ export default function IndexPage() {
                 },
                 (err) => {
                     clearTimeout(timer);
-                    if (err.code === err.PERMISSION_DENIED) {
-                        locationDenied = true;
-                    }
-                    done(null);
+                    done(err.code === err.PERMISSION_DENIED ? { denied: true } : null);
+                    // done(null);
                 },
                 { maximumAge: 0, enableHighAccuracy: true }
             );
