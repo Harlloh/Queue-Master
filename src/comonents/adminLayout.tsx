@@ -32,7 +32,7 @@ function AdminLayout() {
                     <TabBarItem key={item.to} {...item} />
                 ))}
             </nav>
-            <AdminFooter />
+            {/* <AdminFooter /> */}
         </section>
     );
 }
