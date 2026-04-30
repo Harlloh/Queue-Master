@@ -40,7 +40,7 @@ export default function IndexPage() {
             const res = await api.get('/user/validateSession', {
                 params: { checkInSlug: lgaUniqueLink }
             });
-            // setSessionInfo(res.data.session);
+            setSessionInfo(res.data.session);
             return res.data;
         } catch {
             return null;
