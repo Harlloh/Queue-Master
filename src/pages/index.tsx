@@ -5,7 +5,7 @@ import { useParams } from "react-router-dom";
 import type { SessionInterface } from "../lib/utils";
 import api from "../lib/axios";
 
-type ViewState = "loading" | "no_location_access" | "no_session" | "outside" | "form" | "success" | "already_in";
+type ViewState = "loading" | "no_location_access" | "no_session" | "outside" | "form" | "success" | "already_in" | "poor_gps";
 
 export default function IndexPage() {
     const { lgaUniqueLink } = useParams();
@@ -21,14 +21,14 @@ export default function IndexPage() {
     const [checkedInAt, setCheckedInAt] = useState<string | null>(null);
     const [error, setError] = useState("");
 
-    const getLocation = (): Promise<{ latitude: number; longitude: number } | null> => {
+    const getLocation = (): Promise<{ latitude: number; longitude: number; accuracy: number } | null> => {
         return new Promise((resolve) => {
             if (!navigator.geolocation) {
                 resolve(null);
                 return;
             }
             navigator.geolocation.getCurrentPosition(
-                (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+                (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: pos.coords.accuracy }),
                 () => resolve(null),
                 { maximumAge: 0, enableHighAccuracy: true }
             );
@@ -40,7 +40,7 @@ export default function IndexPage() {
             const res = await api.get('/user/validateSession', {
                 params: { checkInSlug: lgaUniqueLink }
             });
-            setSessionInfo(res.data.sessionInfo);
+            // setSessionInfo(res.data.session);
             return res.data;
         } catch {
             return null;
@@ -79,6 +79,9 @@ export default function IndexPage() {
         if (!location) {
             setView("no_location_access");
             return;
+        }
+        if (location.accuracy > 100) {
+            setView('poor_gps')
         }
 
         // geofence check — backend already knows the LGA coords, just send corper coords

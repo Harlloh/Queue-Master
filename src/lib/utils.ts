@@ -46,6 +46,16 @@ export const CARD_STATES: Record<string, any> = {
         },
         showSpinner: false,
     },
+    poor_gps: {
+        icon: React.createElement(MdLocationOff, { className: "text-5xl text-amber-500" }),
+        title: "You're gps location is poor",
+        message: "Your device location gps has a low accuracy, change location and try again with 10-15s.",
+        button: {
+            text: "Retry location check",
+            action: "retry",
+        },
+        showSpinner: false,
+    },
     // ─── NEW ERROR STATE ─────────────────────────────────────────
     error: {
         icon: React.createElement(MdError, { className: "text-5xl text-red-500" }),
