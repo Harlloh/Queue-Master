@@ -81,10 +81,10 @@ export default function IndexPage() {
             setView("no_location_access");
             return;
         }
-        if (location.accuracy > 100) {
-            setView('poor_gps')
-            return
-        }
+        // if (location.accuracy > 100) {
+        //     setView('poor_gps')
+        //     return
+        // }
 
         // geofence check — backend already knows the LGA coords, just send corper coords
         console.log(location, 'Location...')
