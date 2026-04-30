@@ -5,7 +5,7 @@ import { useParams } from "react-router-dom";
 // import type { SessionInterface } from "../lib/utils";
 import api from "../lib/axios";
 
-type ViewState = "loading" | "no_location_access" | "no_session" | "outside" | "form" | "success" | "already_in" | "poor_gps";
+type ViewState = "loading" | "no_location_access" | "no_session" | "outside" | "error" | "form" | "success" | "already_in" | "poor_gps";
 
 export default function IndexPage() {
     const { lgaUniqueLink } = useParams();
@@ -21,15 +21,53 @@ export default function IndexPage() {
     const [checkedInAt, setCheckedInAt] = useState<string | null>(null);
     const [error, setError] = useState("");
 
+    // const getLocation = (): Promise<{ latitude: number; longitude: number; accuracy: number } | null> => {
+    //     return new Promise((resolve) => {
+    //         if (!navigator.geolocation) {
+    //             resolve(null);
+    //             return;
+    //         }
+
+    //         navigator.geolocation.getCurrentPosition(
+    //             (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: pos.coords.accuracy }),
+    //             () => resolve(null),
+    //             { maximumAge: 0, enableHighAccuracy: true }
+    //         );
+    //     });
+    // };
+
     const getLocation = (): Promise<{ latitude: number; longitude: number; accuracy: number } | null> => {
         return new Promise((resolve) => {
-            if (!navigator.geolocation) {
-                resolve(null);
-                return;
-            }
-            navigator.geolocation.getCurrentPosition(
-                (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: pos.coords.accuracy }),
-                () => resolve(null),
+            if (!navigator.geolocation) { resolve(null); return; }
+
+            const ACCURACY_THRESHOLD = 50; // metres
+            const TIMEOUT = 15000; // max wait time
+
+            let watchId: number;
+            let settled = false;
+
+            const done = (result: any) => {
+                if (settled) return;
+                settled = true;
+                navigator.geolocation.clearWatch(watchId);
+                resolve(result);
+            };
+
+            // Hard timeout — don't wait forever
+            const timer = setTimeout(() => done(null), TIMEOUT);
+
+            watchId = navigator.geolocation.watchPosition(
+                (pos) => {
+                    const { latitude, longitude, accuracy } = pos.coords;
+                    console.log('GPS accuracy:', accuracy);
+
+                    // Accept as soon as we hit threshold
+                    if (accuracy <= ACCURACY_THRESHOLD) {
+                        clearTimeout(timer);
+                        done({ latitude, longitude, accuracy });
+                    }
+                },
+                () => { clearTimeout(timer); done(null); },
                 { maximumAge: 0, enableHighAccuracy: true }
             );
         });
@@ -42,8 +80,8 @@ export default function IndexPage() {
             });
             // setSessionInfo(res.data.session);
             return res.data;
-        } catch {
-            return null;
+        } catch (error) {
+            return null
         }
     };
     const validateLocation = async (location: any) => {
@@ -81,10 +119,11 @@ export default function IndexPage() {
             setView("no_location_access");
             return;
         }
-        // if (location.accuracy > 100) {
-        //     setView('poor_gps')
-        //     return
-        // }
+        if (location.accuracy > 100) {
+            setView('poor_gps')
+            console.log(location.accuracy);
+            return
+        }
 
         // geofence check — backend already knows the LGA coords, just send corper coords
         console.log(location, 'Location...')
@@ -135,7 +174,7 @@ export default function IndexPage() {
             </div>
 
             <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                {["loading", "no_location_access", "no_session", "outside"].includes(view) && (
+                {["loading", "no_location_access", "no_session", "outside", "poor_gps"].includes(view) && (
                     <StateCard state={view} onRetry={init} />
                 )}
 
