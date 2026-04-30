@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { MdCheckCircle, MdError, MdAccessTime } from "react-icons/md";
 import StateCard from "../comonents/stateCard";
 import { useParams } from "react-router-dom";
-import type { SessionInterface } from "../lib/utils";
+// import type { SessionInterface } from "../lib/utils";
 import api from "../lib/axios";
 
 type ViewState = "loading" | "no_location_access" | "no_session" | "outside" | "form" | "success" | "already_in" | "poor_gps";
@@ -16,7 +16,7 @@ export default function IndexPage() {
     const [view, setView] = useState<ViewState>("loading");
     const [form, setForm] = useState({ name: "", stateCode: "" });
     const [submitting, setSubmitting] = useState(false);
-    const [sessionInfo, setSessionInfo] = useState<SessionInterface | null>(null);
+    // const [sessionInfo, setSessionInfo] = useState<SessionInterface | null>(null);
     const [queueNumber, setQueueNumber] = useState<number | null>(null);
     const [checkedInAt, setCheckedInAt] = useState<string | null>(null);
     const [error, setError] = useState("");
@@ -40,7 +40,7 @@ export default function IndexPage() {
             const res = await api.get('/user/validateSession', {
                 params: { checkInSlug: lgaUniqueLink }
             });
-            setSessionInfo(res.data.session);
+            // setSessionInfo(res.data.session);
             return res.data;
         } catch {
             return null;
@@ -123,15 +123,15 @@ export default function IndexPage() {
         }
     };
 
-    const sessionLabel = sessionInfo ? `${sessionInfo.lga} · ${sessionInfo.cdsGroup}` : null;
+    // const sessionLabel = sessionInfo ? `${sessionInfo.lga} · ${sessionInfo.cdsGroup}` : null;
 
     return (
         <div className="min-h-screen bg-[#F4F6FA] flex flex-col items-center justify-center px-4 py-10 font-sans">
             <div className="mb-6 text-center">
                 <h1 className="text-2xl font-bold tracking-tight text-[#0F1B3C]">CDS Attendance</h1>
-                {sessionLabel && !["no_session", "no_location_access"].includes(view) && (
+                {/* {sessionLabel && !["no_session", "no_location_access"].includes(view) && (
                     <p className="text-sm text-slate-500 mt-1">{sessionLabel}</p>
-                )}
+                )} */}
             </div>
 
             <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
