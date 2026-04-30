@@ -13,7 +13,7 @@ function AdminLayout() {
         { to: "/admin/settings", label: "Settings", icon: <MdSettings /> },
     ];
     return (
-        <section className="min-h-screen bg-[#F4F6FA] font-sans">
+        <section className="h-screen bg-[#F4F6FA] font-sans">
             <AdminNav />
             <div className="flex flex-1">
                 <aside className="hidden md:flex flex-col w-48 border-r border-slate-100 bg-white h-screen shrink-0 py-4">

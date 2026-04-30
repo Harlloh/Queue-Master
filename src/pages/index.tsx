@@ -7,7 +7,7 @@ import api from "../lib/axios";
 import { Thumbmark } from "@thumbmarkjs/thumbmarkjs";
 import toast from "react-hot-toast";
 
-type ViewState = "loading" | "no_location_access" | "no_session" | "outside" | "error" | "form" | "success" | "already_in" | "poor_gps";
+type ViewState = "loading" | "no_location_access" | "no_session" | "outside" | "error" | "form" | "success" | "already_in" | "poor_gps" | "submission_error";
 
 export default function IndexPage() {
 
@@ -25,26 +25,11 @@ export default function IndexPage() {
     }, []);
 
 
-
-
-
-
-
-
-
-
-
-
-
-
     const { lgaUniqueLink } = useParams();
-    // const [location, setLocation] = useState({
-    //     longitude: ''
-    // })
-
     const [view, setView] = useState<ViewState>("form");
     const [form, setForm] = useState({ name: "", stateCode: "" });
     const [submitting, setSubmitting] = useState(false);
+
     const [queueNumber, setQueueNumber] = useState<number | null>(null);
     const [checkedInAt, setCheckedInAt] = useState<string | null>(null);
     const [error, setError] = useState("");
@@ -100,7 +85,12 @@ export default function IndexPage() {
             console.log(res.data);
             // setSessionInfo(res.data.session);
             return res.data;
-        } catch (error) {
+        } catch (error: any) {
+            if (!error.response) {
+                setView("error"); // network error
+            } else {
+                setView(error.response.data.status); // actual no session
+            }
             return null
         }
     };
@@ -128,10 +118,8 @@ export default function IndexPage() {
             validateSession(),
             getLocation(),
         ]);
-        console.log(location, 'location');
 
         if (!sessionData) {
-            setView("no_session");
             return;
         }
 
@@ -146,7 +134,7 @@ export default function IndexPage() {
         }
 
         if (location.accuracy > ACCURACY_THRESHOLD) {
-            setView('poor_gps'); // got a reading but it's bad — retry makes sense
+            setView('poor_gps');
             return;
         }
 
@@ -160,7 +148,7 @@ export default function IndexPage() {
             setView("no_session");
             return;
         }
-        // init();
+        init();
     }, [lgaUniqueLink]);
 
     const handleSubmit = async () => {
@@ -188,7 +176,11 @@ export default function IndexPage() {
             setCheckedInAt(res.data.checkedInAt);
             setView(res.data.status);
         } catch (err: any) {
-            setView(err.response.data.status)
+            if (err?.response.data.status) {
+                setView(err.response.data.status);
+            } else {
+                setView('submission_error')
+            }
             setError(err?.response?.data?.message || "Something went wrong.");
         } finally {
             setSubmitting(false);
@@ -207,7 +199,7 @@ export default function IndexPage() {
             </div>
 
             <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                {["loading", "no_location_access", "no_session", "outside", "poor_gps", 'error'].includes(view) && (
+                {["loading", "no_location_access", "no_session", "outside", "poor_gps", 'error', 'submission_error'].includes(view) && (
                     <StateCard state={view} onRetry={init} />
                 )}
 
