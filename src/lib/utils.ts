@@ -107,6 +107,51 @@ export const CARD_STATES: Record<string, any> = {
 };
 
 
+
+export const ACCURACY_THRESHOLD = 100000; // metres
+// const ACCURACY_THRESHOLD = 100; // metres
+const TIMEOUT = 15000; // max wait time
+export const getLocation = (): Promise<{ latitude: number; longitude: number; accuracy: number } | { denied: true } | null> => {
+
+    return new Promise((resolve) => {
+        if (!navigator.geolocation) { resolve(null); return; }
+
+
+        let watchId: number;
+        let settled = false;
+
+        const done = (result: any) => {
+            if (settled) return;
+            settled = true;
+            navigator.geolocation.clearWatch(watchId);
+            resolve(result);
+        };
+
+        // Hard timeout — don't wait forever
+        const timer = setTimeout(() => done(null), TIMEOUT);
+
+        watchId = navigator.geolocation.watchPosition(
+            (pos) => {
+                const { latitude, longitude, accuracy } = pos.coords;
+                console.log('GPS accuracy:', accuracy);
+
+                // Accept as soon as we hit threshold
+                if (accuracy <= ACCURACY_THRESHOLD) {
+                    clearTimeout(timer);
+                    done({ latitude, longitude, accuracy });
+                }
+            },
+            (err) => {
+                clearTimeout(timer);
+                done(err.code === err.PERMISSION_DENIED ? { denied: true } : null);
+                // done(null);
+            },
+            { maximumAge: 0, enableHighAccuracy: true }
+        );
+    });
+};
+
+
 export interface SessionInterface {
     lga: string,
     cdsGroup: string,

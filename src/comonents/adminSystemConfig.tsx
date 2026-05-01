@@ -6,6 +6,7 @@ import { MdMyLocation, MdSave, MdSettings } from "react-icons/md";
 import { useAuth } from "../store/authStore";
 import api from "../lib/axios";
 import toast from "react-hot-toast";
+import { getLocation } from "../lib/utils";
 
 type FormDataType = {
     name: string;
@@ -46,31 +47,61 @@ function AdminSystemConfigScreen() {
             [name]: value
         }));
     };
-
-    const useCurrentLocation = () => {
-        if (!navigator.geolocation) {
-            toast.error('Location permission required. Allow permission and refresh the page');
-            return;
-        }
+    const getLocationComp = async () => {
         setUI({ gettingLocation: true });
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
+        try {
+            const location = await getLocation();
+            if (location) {
+                if ('denied' in location) {
+                    toast.error('Location permission denied. Allow permission and refresh the page');
+                    setUI({ gettingLocation: false });
+                    return;
+                }
+
+                const { latitude, longitude } = location;
                 setFormData(prev => ({
                     ...prev,
-                    lat: parseFloat(pos.coords.latitude.toFixed(6)),
-                    lng: parseFloat(pos.coords.longitude.toFixed(6)),
+                    lat: parseFloat(latitude.toFixed(6)),
+                    lng: parseFloat(longitude.toFixed(6)),
                 }));
                 setUI({ gettingLocation: false, locationGotten: true });
                 toast.success('Location retrieved successfully.');
                 setTimeout(() => setUI({ locationGotten: false }), 5000);
-            },
-            (error) => {
-                setUI({ gettingLocation: false });
-                toast.error('Location permission denied. Allow permission and refresh the page');
-                console.error(error);
+            } else {
+                toast.error('Failed to retrieve location. Please try again.');
             }
-        );
-    };
+
+        } catch (error) {
+            setUI({ gettingLocation: false });
+            toast.error('Failed to retrieve location. Please try again.');
+            console.error(error);
+        }
+    }
+
+    // const useCurrentLocation = () => {
+    //     if (!navigator.geolocation) {
+    //         toast.error('Location permission required. Allow permission and refresh the page');
+    //         return;
+    //     }
+    //     setUI({ gettingLocation: true });
+    //     navigator.geolocation.getCurrentPosition(
+    //         (pos) => {
+    //             setFormData(prev => ({
+    //                 ...prev,
+    //                 lat: parseFloat(pos.coords.latitude.toFixed(6)),
+    //                 lng: parseFloat(pos.coords.longitude.toFixed(6)),
+    //             }));
+    //             setUI({ gettingLocation: false, locationGotten: true });
+    //             toast.success('Location retrieved successfully.');
+    //             setTimeout(() => setUI({ locationGotten: false }), 5000);
+    //         },
+    //         (error) => {
+    //             setUI({ gettingLocation: false });
+    //             toast.error('Location permission denied. Allow permission and refresh the page');
+    //             console.error(error);
+    //         }
+    //     );
+    // };
 
     const saveConfig = async () => {
         const { name, lat, lng, radius } = formData;
@@ -170,7 +201,7 @@ function AdminSystemConfigScreen() {
                     </div>
 
                     <button
-                        onClick={useCurrentLocation}
+                        onClick={getLocationComp}
                         disabled={uiState.gettingLocation}
                         className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-600 font-semibold hover:bg-slate-50 active:scale-[0.98] transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >

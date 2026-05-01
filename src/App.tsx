@@ -31,28 +31,12 @@ function App() {
         { path: 'settings', element: <AdminSystemCOnfigScreen /> },
       ]
     },
-
-    // {
-    //   path: '/admin-dashboard',
-    //   element: (
-    //     <ProtectedRoute>
-    //       <AdminPage />
-    //     </ProtectedRoute>
-    //   )
-    // },
-    // {
-    //   path: '/admin-system-config',
-    //   element: (
-    //     <ProtectedRoute>
-    //       <AdminSystemCOnfigScreen />
-    //     </ProtectedRoute>
-    //   )
-    // },
     {
       path: '/*',
       Component: NotFound
     },
   ])
+
   return (
     <RouterProvider router={router} />
   )

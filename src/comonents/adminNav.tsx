@@ -2,21 +2,32 @@ import { MdLock, MdLogout } from "react-icons/md";
 import { useAuth } from "../store/authStore";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/axios";
+import { useState } from "react";
 
 function AdminNav() {
     const { session, setAdmin, setSession, setIsAuthenticated, admin } = useAuth()
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
     const navigate = useNavigate()
     const baseUrl = window.location.origin
 
     const handleLogOut = async () => {
-        const res = await api.get('/auth/logout');
-        if (res.data.success) {
-            setAdmin(null)
-            setSession(null)
-            setIsAuthenticated(false)
-            navigate('/admin-login')
+        try {
+            setIsLoggingOut(true);
+
+            const res = await api.get('/auth/logout');
+
+            if (res.data.success) {
+                setAdmin(null);
+                setSession(null);
+                setIsAuthenticated(false);
+                navigate('/admin-login');
+            }
+        } catch (err) {
+            console.error("Logout failed", err);
+        } finally {
+            setIsLoggingOut(false);
         }
-    }
+    };
     return (
         <>
             {/* ── Top nav ─────────────────────────────────────────────── */}
@@ -39,9 +50,10 @@ function AdminNav() {
 
                 <button
                     onClick={handleLogOut}
+                    disabled={isLoggingOut}
                     className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition"
                 >
-                    <MdLogout className="text-sm" /> Log Out
+                    <MdLogout className="text-sm" /> {isLoggingOut ? 'Loggin Out' : 'Log Out'}
                 </button>
             </header>
 
@@ -74,6 +86,17 @@ function AdminNav() {
                     >
                         Copy
                     </button>
+                </div>
+            )}
+
+            {isLoggingOut && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
+                    <div className="bg-white rounded-xl px-6 py-4 flex items-center gap-3 shadow-lg">
+                        <div className="h-5 w-5 border-2 border-[#2b7234] border-t-transparent rounded-full animate-spin" />
+                        <span className="text-sm font-semibold text-slate-700">
+                            Logging you out...
+                        </span>
+                    </div>
                 </div>
             )}
         </>

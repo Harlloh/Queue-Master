@@ -4,6 +4,9 @@ import AdminNav from "./adminNav";
 import SidebarItem from "./siebarItem";
 import TabBarItem from "./tabBarItem";
 import { MdBolt, MdListAlt, MdSettings } from "react-icons/md";
+import { useEffect } from "react";
+import { useAuth } from "../store/authStore";
+import api from "../lib/axios";
 
 function AdminLayout() {
     // const [activeTab, setActiveTab] = useState<TabId>('session');
@@ -12,6 +15,48 @@ function AdminLayout() {
         { to: "/admin/attendance", label: "Attendance", icon: <MdListAlt /> },
         { to: "/admin/settings", label: "Settings", icon: <MdSettings /> },
     ];
+    const { setAdmin, setSession, setIsAuthenticated } = useAuth();
+    useEffect(() => {
+        const getServerAdminState = async () => {
+            try {
+                const res = await api.get('/admin/getAdmin');
+
+                if (res.data.success) {
+                    const { lgaDetails, session } = res.data;
+
+                    // Build admin object properly
+                    setAdmin({
+                        id: session.adminId,
+                        name: "",
+                        email: "",
+                        lgaDetails: {
+                            name: lgaDetails.name,
+                            latitude: lgaDetails.latitude,
+                            longitude: lgaDetails.longitude,
+                            radius: lgaDetails.radius,
+                            updatedAt: lgaDetails.updatedAt,
+                            checkInSlug: lgaDetails.checkInSlug,
+                        }
+                    });
+
+                    setSession({
+                        id: session.id,
+                        isOpen: session.isOpen,
+                        lgaId: session.lgaId,
+                        openedAt: session.openedAt,
+                        cdsGroupId: "", // you don’t have this → mismatch again
+                        cdsGroupName: "",
+                    });
+
+                    setIsAuthenticated(true);
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        getServerAdminState();
+    }, []);
     return (
         <section className="h-screen bg-[#F4F6FA] font-sans">
             <AdminNav />

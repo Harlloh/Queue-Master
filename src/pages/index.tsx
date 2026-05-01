@@ -6,6 +6,7 @@ import { useParams } from "react-router-dom";
 import api from "../lib/axios";
 import { Thumbmark } from "@thumbmarkjs/thumbmarkjs";
 import toast from "react-hot-toast";
+import { ACCURACY_THRESHOLD, getLocation } from "../lib/utils";
 
 type ViewState = "loading" | "no_location_access" | "no_session" | "outside" | "error" | "form" | "success" | "already_in" | "poor_gps" | "submission_error";
 
@@ -26,7 +27,7 @@ export default function IndexPage() {
 
 
     const { lgaUniqueLink } = useParams();
-    const [view, setView] = useState<ViewState>("form");
+    const [view, setView] = useState<ViewState>("loading");
     const [form, setForm] = useState({ name: "", stateCode: "" });
     const [submitting, setSubmitting] = useState(false);
 
@@ -34,48 +35,48 @@ export default function IndexPage() {
     const [checkedInAt, setCheckedInAt] = useState<string | null>(null);
     const [error, setError] = useState("");
 
-    const ACCURACY_THRESHOLD = 100; // metres
     // const ACCURACY_THRESHOLD = 100; // metres
-    const TIMEOUT = 15000; // max wait time
-    const getLocation = (): Promise<{ latitude: number; longitude: number; accuracy: number } | { denied: true } | null> => {
+    // // const ACCURACY_THRESHOLD = 100; // metres
+    // const TIMEOUT = 15000; // max wait time
+    // const getLocation = (): Promise<{ latitude: number; longitude: number; accuracy: number } | { denied: true } | null> => {
 
-        return new Promise((resolve) => {
-            if (!navigator.geolocation) { resolve(null); return; }
+    //     return new Promise((resolve) => {
+    //         if (!navigator.geolocation) { resolve(null); return; }
 
 
-            let watchId: number;
-            let settled = false;
+    //         let watchId: number;
+    //         let settled = false;
 
-            const done = (result: any) => {
-                if (settled) return;
-                settled = true;
-                navigator.geolocation.clearWatch(watchId);
-                resolve(result);
-            };
+    //         const done = (result: any) => {
+    //             if (settled) return;
+    //             settled = true;
+    //             navigator.geolocation.clearWatch(watchId);
+    //             resolve(result);
+    //         };
 
-            // Hard timeout — don't wait forever
-            const timer = setTimeout(() => done(null), TIMEOUT);
+    //         // Hard timeout — don't wait forever
+    //         const timer = setTimeout(() => done(null), TIMEOUT);
 
-            watchId = navigator.geolocation.watchPosition(
-                (pos) => {
-                    const { latitude, longitude, accuracy } = pos.coords;
-                    console.log('GPS accuracy:', accuracy);
+    //         watchId = navigator.geolocation.watchPosition(
+    //             (pos) => {
+    //                 const { latitude, longitude, accuracy } = pos.coords;
+    //                 console.log('GPS accuracy:', accuracy);
 
-                    // Accept as soon as we hit threshold
-                    if (accuracy <= ACCURACY_THRESHOLD) {
-                        clearTimeout(timer);
-                        done({ latitude, longitude, accuracy });
-                    }
-                },
-                (err) => {
-                    clearTimeout(timer);
-                    done(err.code === err.PERMISSION_DENIED ? { denied: true } : null);
-                    // done(null);
-                },
-                { maximumAge: 0, enableHighAccuracy: true }
-            );
-        });
-    };
+    //                 // Accept as soon as we hit threshold
+    //                 if (accuracy <= ACCURACY_THRESHOLD) {
+    //                     clearTimeout(timer);
+    //                     done({ latitude, longitude, accuracy });
+    //                 }
+    //             },
+    //             (err) => {
+    //                 clearTimeout(timer);
+    //                 done(err.code === err.PERMISSION_DENIED ? { denied: true } : null);
+    //                 // done(null);
+    //             },
+    //             { maximumAge: 0, enableHighAccuracy: true }
+    //         );
+    //     });
+    // };
 
     const validateSession = async (): Promise<{ withinRadius: boolean } | null> => {
         try {
@@ -101,7 +102,6 @@ export default function IndexPage() {
                     checkInSlug: lgaUniqueLink,
                     latitude: location.latitude,
                     longitude: location.longitude,
-                    accuracy: location.accuracy
                 }
             });
 
