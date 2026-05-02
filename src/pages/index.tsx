@@ -78,7 +78,7 @@ export default function IndexPage() {
     //     });
     // };
 
-    const validateSession = async (): Promise<{ withinRadius: boolean } | null> => {
+    const validateSession = async (): Promise<{ sessionData: any } | null> => {
         try {
             const res = await api.get('/user/validateSession', {
                 params: { checkInSlug: lgaUniqueLink }
@@ -118,7 +118,7 @@ export default function IndexPage() {
             validateSession(),
             getLocation(),
         ]);
-
+        console.log(sessionData, 'This is the session data');
         if (!sessionData) {
             return;
         }
