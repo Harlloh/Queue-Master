@@ -16,7 +16,11 @@ function App() {
     },
     {
       path: '/admin-login',
-      Component: LoginPage
+      element: <LoginPage mode="login" />
+    },
+    {
+      path: '/admin-register',
+      element: <LoginPage mode="register" />
     },
     {
       path: '/admin',

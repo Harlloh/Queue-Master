@@ -7,6 +7,7 @@ import { useAuth } from "../store/authStore";
 import api from "../lib/axios";
 import toast from "react-hot-toast";
 import { getLocation } from "../lib/utils";
+import QRCode from "./qrCode";
 
 type FormDataType = {
     name: string;
@@ -69,6 +70,7 @@ function AdminSystemConfigScreen() {
                 setTimeout(() => setUI({ locationGotten: false }), 5000);
             } else {
                 toast.error('Failed to retrieve location. Please try again.');
+                setUI({ gettingLocation: false });
             }
 
         } catch (error) {
@@ -147,7 +149,8 @@ function AdminSystemConfigScreen() {
     };
 
     return (
-        <main className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-5">
+        <main className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-5 h-fit">
+            <QRCode />
             <AdminCard
                 icon={<MdSettings className="text-lg" />}
                 title="System Configuration"

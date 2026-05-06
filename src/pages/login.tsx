@@ -2,18 +2,21 @@ import { useState } from "react";
 import { MdLock, MdVisibility, MdVisibilityOff, MdError } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../store/authStore";
+import api from "../lib/axios";
+import toast from "react-hot-toast";
 
 type LoginState = "idle" | "loading" | "error";
 
-export default function LoginPage() {
+export default function LoginPage({ mode }: { mode: string }) {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [status, setStatus] = useState<LoginState>("idle");
     const [errorMsg, setErrorMsg] = useState("invalid email or password");
     const navigate = useNavigate();
+    const isRegister = mode === "register";
 
-    const { login } = useAuth()
+    const { login } = useAuth();
 
     const handleLogin = async () => {
         if (!email.trim() || !password.trim()) {
@@ -26,6 +29,19 @@ export default function LoginPage() {
         setErrorMsg("");
 
         try {
+            if (isRegister) {
+                const res = await api.post('/auth/register', { email, password });
+                if (!res.data.success) {
+                    setStatus('error');
+                    setErrorMsg(res.data.message || 'Something went wrong');
+                    return;
+                }
+                toast.success('Admin account created successfully')
+                setStatus("idle");
+                navigate("/admin-login");
+                return;
+            }
+
             const loggedIn = await login(email, password);
 
             if (!loggedIn.success) {
@@ -114,10 +130,12 @@ export default function LoginPage() {
                     {/* Heading */}
                     <div className="mb-8">
                         <h2 className="text-2xl font-black text-[#2b7234] tracking-tight">
-                            Sign in
+                            {isRegister ? "Create admin account" : "Sign in"}
                         </h2>
                         <p className="text-slate-500 text-sm mt-1">
-                            Enter your admin credentials to continue.
+                            {isRegister
+                                ? "Create your admin credentials to continue."
+                                : "Enter your admin credentials to continue."}
                         </p>
                     </div>
 
@@ -200,10 +218,10 @@ export default function LoginPage() {
                             {status === "loading" ? (
                                 <>
                                     <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white animate-spin" />
-                                    Signing in…
+                                    {isRegister ? "Creating account…" : "Signing in…"}
                                 </>
                             ) : (
-                                "Sign in"
+                                isRegister ? "Create account" : "Sign in"
                             )}
                         </button>
                     </div>
