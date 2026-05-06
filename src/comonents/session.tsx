@@ -5,14 +5,13 @@ import Input from "./inputField";
 import Label from "./label";
 import { useEffect, useState } from "react";
 import Feedback from "./toast";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import api from "../lib/axios";
 
 function SessionPage() {
     const { session, admin, setSession } = useAuth()
     const navigate = useNavigate()
-    const { lgaUniqueLink } = useParams();
 
 
     const [manualName, setManualName] = useState("");
