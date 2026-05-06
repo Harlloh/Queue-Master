@@ -108,7 +108,7 @@ export const CARD_STATES: Record<string, any> = {
 
 
 
-export const ACCURACY_THRESHOLD = 100000; // metres
+export const ACCURACY_THRESHOLD = 100; // metres
 // const ACCURACY_THRESHOLD = 100; // metres
 const TIMEOUT = 15000; // max wait time
 export const getLocation = (): Promise<{ latitude: number; longitude: number; accuracy: number } | { denied: true } | null> => {

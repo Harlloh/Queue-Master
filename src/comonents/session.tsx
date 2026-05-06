@@ -59,7 +59,7 @@ function SessionPage() {
         setLoading(prev => ({ ...prev, close: true }));
 
         try {
-            const res = await api.post('/admin/close-session', { sessionId: session?.id, checkInSlug: lgaUniqueLink });
+            const res = await api.post('/admin/close-session', { sessionId: session?.id });
 
 
             if (!res.data.success) {
