@@ -32,7 +32,7 @@ function SessionPage() {
         setLoading(prev => ({ ...prev, open: true }));
 
         try {
-            const res = await api.post('/admin/open-session', { sessionId: session?.id })
+            const res = await api.post('/admin/open-session', {})
             if (res.data.success) {
                 setSession(res.data.session);
                 toast.success('Session opened successfully');
