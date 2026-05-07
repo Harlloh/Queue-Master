@@ -175,7 +175,7 @@ function AdminSystemConfigScreen() {
                                 name="lat"
                                 value={formData.lat}
                                 onChange={handleChange}
-                                disabled
+                                
                             />
                         </div>
                         <div>
@@ -185,7 +185,7 @@ function AdminSystemConfigScreen() {
                                 name="lng"
                                 value={formData.lng}
                                 onChange={handleChange}
-                                disabled
+                                
                             />
                         </div>
                     </div>
