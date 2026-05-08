@@ -116,8 +116,8 @@ function AdminSystemConfigScreen() {
             toast.error('Radius must be between 50 m and 1000 m.');
             return;
         }
-const parsedLat = parsedFloat(String(lat));
-        const parsedLng = parsedFloat(String(lng));
+const parsedLat = parseFloat(String(lat));
+        const parsedLng = parseFloat(String(lng));
         setUI({ saving: true });
         try {
             const res = await api.post('/admin/update-lga', {
