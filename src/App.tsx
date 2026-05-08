@@ -18,10 +18,10 @@ function App() {
       path: '/admin-login',
       element: <LoginPage mode="login" />
     },
-    {
-      path: '/admin-register',
-      element: <LoginPage mode="register" />
-    },
+   // {
+     // path: '/admin-register',
+    //  element: <LoginPage mode="register" />
+    //},
     {
       path: '/admin',
       element: (
