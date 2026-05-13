@@ -7,6 +7,7 @@ import AdminSystemCOnfigScreen from "./comonents/adminSystemConfig"
 import AdminLayout from "./comonents/adminLayout"
 import SessionPage from "./comonents/session"
 import AttendancePage from "./comonents/attendance"
+import Scanner from "./comonents/scanner"
 
 function App() {
   const router = createBrowserRouter([
@@ -18,8 +19,8 @@ function App() {
       path: '/admin-login',
       element: <LoginPage mode="login" />
     },
-   // {
-     // path: '/admin-register',
+    // {
+    // path: '/admin-register',
     //  element: <LoginPage mode="register" />
     //},
     {
@@ -33,6 +34,7 @@ function App() {
         { index: true, element: <SessionPage /> },
         { path: 'attendance', element: <AttendancePage /> },
         { path: 'settings', element: <AdminSystemCOnfigScreen /> },
+        { path: 'scanner', element: <Scanner /> },
       ]
     },
     {
