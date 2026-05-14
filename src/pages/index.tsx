@@ -274,7 +274,7 @@ export default function IndexPage() {
                                 includeMargin={true}
                             />
                             <p>Queue Number: <strong>{queueNumber}</strong></p>
-                            <p>State Code: {form?.stateCode}</p>
+                            {/* <p>State Code: {form?.stateCode}</p> */}
                         </div>
 
                         <p className="text-sm text-slate-500 mt-1">Please wait for your turn</p>

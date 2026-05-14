@@ -17,13 +17,14 @@ export default function Scanner() {
 
     const [status, setStatus] = useState<ScanStatus>('scanning');
     const [result, setResult] = useState<ScanResult | null>(null);
-    const isProcessingRef = useRef(false);
-    const isRunningRef = useRef(false);
-    const scannerRef = useRef<Html5Qrcode | null>(null);
 
-    useEffect(() => {
-        const scanner = new Html5Qrcode('qr-reader');
-        scannerRef.current = scanner;
+    const scannerRef = useRef<Html5Qrcode | null>(null);
+    const isRunningRef = useRef(false);
+    const isProcessingRef = useRef(false);
+
+    const startScanner = () => {
+        const scanner = scannerRef.current;
+        if (!scanner || isRunningRef.current) return;
 
         scanner
             .start(
@@ -34,14 +35,21 @@ export default function Scanner() {
             )
             .then(() => { isRunningRef.current = true; })
             .catch(() => setStatus('error'));
+    };
+
+    const stopScanner = async () => {
+        const scanner = scannerRef.current;
+        if (!scanner || !isRunningRef.current) return;
+        await scanner.stop();
+        isRunningRef.current = false;
+    };
+
+    useEffect(() => {
+        scannerRef.current = new Html5Qrcode('qr-reader');
+        startScanner();
 
         return () => {
-            if (isRunningRef.current && scannerRef.current) {
-                scannerRef.current.stop()
-                    .then(() => scannerRef.current?.clear())
-                    .catch(console.error);
-                isRunningRef.current = false;
-            }
+            stopScanner().then(() => scannerRef.current?.clear());
         };
     }, []);
 
@@ -49,26 +57,25 @@ export default function Scanner() {
         if (isProcessingRef.current) return;
         isProcessingRef.current = true;
 
+        await stopScanner();
+        setStatus('processing');
+
         let qrData: any;
         try {
             qrData = JSON.parse(decodedText);
         } catch {
             setStatus('invalid_qr');
-            scheduleReset();
             return;
         }
 
         const { sessionId, queueNumber, stateCode } = qrData;
         if (!sessionId || !queueNumber || !stateCode) {
             setStatus('invalid_qr');
-            scheduleReset();
             return;
         }
 
-        setStatus('processing');
-
         try {
-            const res = await api.post('/admin/scan/validate', {
+            const res = await api.post('/admin/scan', {
                 sessionId, queueNumber, stateCode, checkInSlug,
             });
 
@@ -76,45 +83,59 @@ export default function Scanner() {
                 setResult(res.data);
                 setStatus('valid');
             } else {
-                setStatus(res.data.status);
+                setStatus(res.data.status ?? 'error');
             }
         } catch {
             setStatus('error');
         }
-
-        scheduleReset();
     };
 
+    const handleScanAgain = async () => {
+        setResult(null);
+        isProcessingRef.current = false;
+        isRunningRef.current = false;
 
-    const scheduleReset = () => {
-        setTimeout(() => {
-            setResult(null);
-            setStatus('scanning');
-            isProcessingRef.current = false;
-        }, 3500);
+        // Tear down the old instance completely
+        if (scannerRef.current) {
+            try { await scannerRef.current.clear(); } catch { }
+        }
+
+        // Fresh instance — avoids any internal state from the previous scan
+        scannerRef.current = new Html5Qrcode('qr-reader');
+
+        setStatus('scanning');
+        startScanner();
     };
 
-    const statusMessages: Record<ScanStatus, string> = {
-        scanning: 'this is a test',
-        processing: 'Verifying...',
-        valid: '✓ Verified',
-        already_scanned: '⚠ Already scanned',
-        wrong_session: '✕ Wrong session — old number',
-        invalid_qr: '✕ Invalid QR code',
-        no_session: '⚠ No active session',
-        error: '✕ Something went wrong',
+    const isDone = status !== 'scanning' && status !== 'processing';
+
+    const errorMessages: Partial<Record<ScanStatus, string>> = {
+        already_scanned: 'This corper has already been scanned.',
+        wrong_session: 'QR is from a different session.',
+        invalid_qr: 'Invalid QR code.',
+        no_session: 'No active session found.',
+        error: 'Something went wrong. Try again.',
     };
 
     return (
-        <div className="flex flex-col items-center gap-4 p-6 max-w-sm mx-auto">
+        <div className="flex flex-col items-center gap-6 p-6 max-w-sm mx-auto">
             <h2 className="text-lg font-semibold text-slate-800">Scan QR Code</h2>
 
-            <div id="qr-reader" className="w-full rounded-xl overflow-hidden" />
+            {/* Camera viewport — always in DOM so html5-qrcode has its element */}
+            <div
+                id="qr-reader"
+                className={`w-full rounded-xl overflow-hidden ${status !== 'scanning' ? 'hidden' : ''}`}
+            />
 
-            <p className={`text-sm font-medium ${status === 'valid' ? 'text-green-600' : status === 'scanning' || status === 'processing' ? 'text-slate-500' : 'text-red-500'}`}>
-                {statusMessages[status]}
-            </p>
+            {/* Processing */}
+            {status === 'processing' && (
+                <div className="flex flex-col items-center gap-3 py-8">
+                    <div className="w-8 h-8 border-4 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
+                    <p className="text-sm text-slate-500">Verifying...</p>
+                </div>
+            )}
 
+            {/* Valid result */}
             {status === 'valid' && result && (
                 <div className="w-full rounded-xl border border-green-200 bg-green-50 p-4 space-y-1">
                     <p className="text-sm text-slate-600">Name: <span className="font-semibold text-slate-800">{result.name}</span></p>
@@ -123,6 +144,20 @@ export default function Scanner() {
                 </div>
             )}
 
+            {/* Error states */}
+            {isDone && status !== 'valid' && (
+                <p className="text-sm font-medium text-red-500">{errorMessages[status]}</p>
+            )}
+
+            {/* Scan Again button — shown after any terminal state */}
+            {isDone && (
+                <button
+                    onClick={handleScanAgain}
+                    className="w-full  text-white text-sm font-medium py-2.5 px-4 rounded-xl bg-[#2b7234] hover:bg-[#153619] transition-colors"
+                >
+                    Scan Again
+                </button>
+            )}
         </div>
     );
 }
