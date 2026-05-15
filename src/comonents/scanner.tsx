@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import QrScanner from 'qr-scanner';
 import { useAuth } from '../store/authStore';
 import api from '../lib/axios';
+import { Link } from 'react-router-dom';
+import { MdLock } from 'react-icons/md';
 
-type ScanStatus = 'scanning' | 'processing' | 'valid' | 'already_scanned' | 'wrong_session' | 'invalid_qr' | 'no_session' | 'error';
+type ScanStatus = 'scanning' | 'processing' | 'valid' | 'invalid_qr' | 'session_ended' | 'error';
 
 interface ScanResult {
     name: string;
@@ -12,57 +14,26 @@ interface ScanResult {
 }
 
 export default function Scanner() {
-    const { admin } = useAuth();
+    const { admin, session } = useAuth();
     const checkInSlug = admin?.lgaDetails?.checkInSlug;
 
     const [status, setStatus] = useState<ScanStatus>('scanning');
     const [result, setResult] = useState<ScanResult | null>(null);
 
-    const scannerRef = useRef<Html5Qrcode | null>(null);
-    const isRunningRef = useRef(false);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const scannerRef = useRef<QrScanner | null>(null);
     const isProcessingRef = useRef(false);
 
-    const startScanner = () => {
-        const scanner = scannerRef.current;
-        if (!scanner || isRunningRef.current) return;
-
-        scanner
-            .start(
-                { facingMode: 'environment' },
-                { fps: 10, qrbox: 250 },
-                handleScan,
-                () => { }
-            )
-            .then(() => { isRunningRef.current = true; })
-            .catch(() => setStatus('error'));
-    };
-
-    const stopScanner = async () => {
-        const scanner = scannerRef.current;
-        if (!scanner || !isRunningRef.current) return;
-        await scanner.stop();
-        isRunningRef.current = false;
-    };
-
-    useEffect(() => {
-        scannerRef.current = new Html5Qrcode('qr-reader');
-        startScanner();
-
-        return () => {
-            stopScanner().then(() => scannerRef.current?.clear());
-        };
-    }, []);
-
-    const handleScan = async (decodedText: string) => {
+    const handleScan = async (scanResult: QrScanner.ScanResult) => {
         if (isProcessingRef.current) return;
         isProcessingRef.current = true;
 
-        await stopScanner();
+        scannerRef.current?.stop();
         setStatus('processing');
 
         let qrData: any;
         try {
-            qrData = JSON.parse(decodedText);
+            qrData = JSON.parse(scanResult.data);
         } catch {
             setStatus('invalid_qr');
             return;
@@ -79,41 +50,70 @@ export default function Scanner() {
                 sessionId, queueNumber, stateCode, checkInSlug,
             });
 
+            console.log(res)
             if (res.data.success) {
                 setResult(res.data);
                 setStatus('valid');
             } else {
                 setStatus(res.data.status ?? 'error');
             }
-        } catch {
-            setStatus('error');
+        } catch (err: any) {
+            const backendStatus = err?.response?.data?.status;
+            setStatus(backendStatus ?? 'error');
         }
     };
+
+    useEffect(() => {
+        if (!videoRef.current) return;
+
+        const scanner = new QrScanner(
+            videoRef.current,
+            handleScan,
+            {
+                preferredCamera: 'environment',
+                highlightScanRegion: true,
+                highlightCodeOutline: true,
+            }
+        );
+
+        scannerRef.current = scanner;
+        scanner.start().catch(() => setStatus('error'));
+
+        return () => {
+            scanner.destroy();
+            scannerRef.current = null;
+        };
+    }, []);
 
     const handleScanAgain = async () => {
         setResult(null);
         isProcessingRef.current = false;
-        isRunningRef.current = false;
 
-        // Tear down the old instance completely
-        if (scannerRef.current) {
-            try { await scannerRef.current.clear(); } catch { }
-        }
+        // Destroy old instance and spin up a fresh one
+        scannerRef.current?.destroy();
 
-        // Fresh instance — avoids any internal state from the previous scan
-        scannerRef.current = new Html5Qrcode('qr-reader');
+        if (!videoRef.current) return;
 
+        const scanner = new QrScanner(
+            videoRef.current,
+            handleScan,
+            {
+                preferredCamera: 'environment',
+                highlightScanRegion: true,
+                highlightCodeOutline: true,
+            }
+        );
+
+        scannerRef.current = scanner;
         setStatus('scanning');
-        startScanner();
+        scanner.start().catch(() => setStatus('error'));
     };
 
     const isDone = status !== 'scanning' && status !== 'processing';
 
     const errorMessages: Partial<Record<ScanStatus, string>> = {
-        already_scanned: 'This corper has already been scanned.',
-        wrong_session: 'QR is from a different session.',
         invalid_qr: 'Invalid QR code.',
-        no_session: 'No active session found.',
+        session_ended: 'The session for this qr code has expired.',
         error: 'Something went wrong. Try again.',
     };
 
@@ -121,13 +121,31 @@ export default function Scanner() {
         <div className="flex flex-col items-center gap-6 p-6 max-w-sm mx-auto">
             <h2 className="text-lg font-semibold text-slate-800">Scan QR Code</h2>
 
-            {/* Camera viewport — always in DOM so html5-qrcode has its element */}
-            <div
-                id="qr-reader"
+            {/* Video element — qr-scanner mounts directly onto this */}
+            {session?.isOpen ? <video
+                ref={videoRef}
                 className={`w-full rounded-xl overflow-hidden ${status !== 'scanning' ? 'hidden' : ''}`}
-            />
+            /> : (
+                <div className="py-12 flex flex-col items-center justify-center text-center gap-3">
+                    <MdLock className="text-4xl text-slate-200" />
 
-            {/* Processing */}
+                    <h3 className="text-sm font-semibold text-slate-600">
+                        No active session
+                    </h3>
+
+                    <p className="text-xs text-slate-400 max-w-xs">
+                        You need to open a session before check-ins can be recorded, viewed or scanned.
+                    </p>
+
+                    <Link
+                        to={'/admin'}
+                        className="mt-2 text-xs font-semibold text-white bg-[#2b7234] px-4 py-2 rounded-lg hover:bg-[#245c2b] transition"
+                    >
+                        Open Session
+                    </Link>
+                </div>
+            )}
+
             {status === 'processing' && (
                 <div className="flex flex-col items-center gap-3 py-8">
                     <div className="w-8 h-8 border-4 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
@@ -135,7 +153,6 @@ export default function Scanner() {
                 </div>
             )}
 
-            {/* Valid result */}
             {status === 'valid' && result && (
                 <div className="w-full rounded-xl border border-green-200 bg-green-50 p-4 space-y-1">
                     <p className="text-sm text-slate-600">Name: <span className="font-semibold text-slate-800">{result.name}</span></p>
@@ -144,16 +161,14 @@ export default function Scanner() {
                 </div>
             )}
 
-            {/* Error states */}
             {isDone && status !== 'valid' && (
                 <p className="text-sm font-medium text-red-500">{errorMessages[status]}</p>
             )}
 
-            {/* Scan Again button — shown after any terminal state */}
             {isDone && (
                 <button
                     onClick={handleScanAgain}
-                    className="w-full  text-white text-sm font-medium py-2.5 px-4 rounded-xl bg-[#2b7234] hover:bg-[#153619] transition-colors"
+                    className="w-full text-white text-sm font-medium py-2.5 px-4 rounded-xl bg-[#2b7234] hover:bg-[#153619] transition-colors"
                 >
                     Scan Again
                 </button>

@@ -35,6 +35,7 @@ export default function IndexPage() {
     const [queueNumber, setQueueNumber] = useState<number | null>(null);
     const [checkedInAt, setCheckedInAt] = useState<string | null>(null);
     const [sessionId, setSessionId] = useState<string | null>(null);
+    const [stateCode, setStateCode] = useState<string | null>(null);
     const [error, setError] = useState("");
 
     // const ACCURACY_THRESHOLD = 100; // metres
@@ -182,6 +183,7 @@ export default function IndexPage() {
             setCheckedInAt(res.data.checkedInAt);
             setView(res.data.status);
             setSessionId(res.data.sessionId);
+            setStateCode(res.data.stateCode);
         } catch (err: any) {
             if (err?.response.data.status) {
                 setView(err.response.data.status);
@@ -198,7 +200,7 @@ export default function IndexPage() {
     const qrPayload = JSON.stringify({
         sessionId,
         queueNumber,
-        stateCode: form?.stateCode,
+        stateCode,
         checkInSlug: lgaUniqueLink
     });
     return (
