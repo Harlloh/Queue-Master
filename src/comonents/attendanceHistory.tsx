@@ -1,6 +1,6 @@
 import { MdHistory, MdFileUpload } from "react-icons/md";
 import AdminCard from "./adminCard";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../lib/axios";
 import toast from "react-hot-toast";
 
@@ -23,7 +23,7 @@ function AttendanceHistory() {
         totalCount: 0,
     });
 
-    const hasFetched = useRef(false);
+    // const hasFetched = useRef(false);
 
     useEffect(() => {
         fetchSessions();
