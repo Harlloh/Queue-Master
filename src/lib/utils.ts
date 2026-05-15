@@ -1,5 +1,5 @@
 import React from "react";
-import { MdLocationOn, MdLocationOff, MdLock, MdError } from "react-icons/md";
+import { MdLocationOn, MdLocationOff, MdLock, MdError, MdQrCodeScanner } from "react-icons/md";
 export const CARD_STATES: Record<string, any> = {
     loading: {
         icon: null, // custom spinner instead of icon
@@ -13,6 +13,16 @@ export const CARD_STATES: Record<string, any> = {
         title: "Getting your location...",
         message: "Location access is required. Please allow location in your browser.",
         button: null,
+        showSpinner: false,
+    },
+    invalid_qr: {
+        icon: React.createElement(MdQrCodeScanner, { className: "text-5xl text-red-500" }),
+        title: "Invalid QR Code",
+        message: "This QR code could not be verified. It may be tampered with or belong to a different session.",
+        button: {
+            text: "Scan Again",
+            action: "retry",
+        },
         showSpinner: false,
     },
     no_location: {

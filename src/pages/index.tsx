@@ -7,6 +7,7 @@ import api from "../lib/axios";
 import { Thumbmark } from "@thumbmarkjs/thumbmarkjs";
 import toast from "react-hot-toast";
 import { ACCURACY_THRESHOLD, getLocation } from "../lib/utils";
+import { QRCodeSVG } from 'qrcode.react';
 
 type ViewState = "loading" | "no_location_access" | "no_session" | "outside" | "error" | "form" | "success" | "already_in" | "poor_gps" | "submission_error";
 
@@ -33,6 +34,8 @@ export default function IndexPage() {
 
     const [queueNumber, setQueueNumber] = useState<number | null>(null);
     const [checkedInAt, setCheckedInAt] = useState<string | null>(null);
+    const [sessionId, setSessionId] = useState<string | null>(null);
+    const [stateCode, setStateCode] = useState<string | null>(null);
     const [error, setError] = useState("");
 
     // const ACCURACY_THRESHOLD = 100; // metres
@@ -179,6 +182,8 @@ export default function IndexPage() {
             setQueueNumber(res.data.queueNumber);
             setCheckedInAt(res.data.checkedInAt);
             setView(res.data.status);
+            setSessionId(res.data.sessionId);
+            setStateCode(res.data.stateCode);
         } catch (err: any) {
             if (err?.response.data.status) {
                 setView(err.response.data.status);
@@ -192,7 +197,12 @@ export default function IndexPage() {
     };
 
     // const sessionLabel = sessionInfo ? `${sessionInfo.lga} · ${sessionInfo.cdsGroup}` : null;
-
+    const qrPayload = JSON.stringify({
+        sessionId,
+        queueNumber,
+        stateCode,
+        checkInSlug: lgaUniqueLink
+    });
     return (
         <div className="min-h-screen bg-[#F4F6FA] flex flex-col items-center justify-center px-4 py-10 font-sans">
             <div className="mb-6 text-center">
@@ -256,6 +266,19 @@ export default function IndexPage() {
                         <p className="text-[80px] font-black leading-none text-[#2563EB] tabular-nums">
                             {String(queueNumber).padStart(3, "0")}
                         </p>
+
+                        <div className="qr-container">
+                            <p>Show this QR code to the admin</p>
+                            <QRCodeSVG
+                                value={qrPayload}
+                                size={220}
+                                level="M"  // error correction level - M is fine for this
+                                includeMargin={true}
+                            />
+                            <p>Queue Number: <strong>{queueNumber}</strong></p>
+                            {/* <p>State Code: {form?.stateCode}</p> */}
+                        </div>
+
                         <p className="text-sm text-slate-500 mt-1">Please wait for your turn</p>
                         {checkedInAt && (
                             <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
