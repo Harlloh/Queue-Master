@@ -73,7 +73,7 @@ function AdminLayout() {
                 </main>
             </div>
 
-            <nav className={`md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 grid grid-cols-4 z-10`}>
+            <nav className={`md:hidden fixed bottom-0 left-0 right-0 bg-red-500 border-t border-slate-100 grid grid-cols-4 z-10`}>
                 {NAV_ITEMS.map(item => (
                     <TabBarItem key={item.to} {...item} />
                 ))}
