@@ -59,7 +59,7 @@ function AdminLayout() {
         getServerAdminState();
     }, []);
     return (
-        <section className="h-fit bg-[#F4F6FA] font-sans flex flex-col">
+        <section className="min-h-screen bg-[#F4F6FA] font-sans flex flex-col">
             <AdminNav />
             <div className="flex flex-1">
                 <aside className="hidden md:flex flex-col w-48 border-r border-slate-100 bg-white h-screen shrink-0 py-4">
