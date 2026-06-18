@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+.bg-brand {
+  background-color: #1e8644;
+}
+.text-brand {
+  color: #1e8644;
+}
+.text-brand-foreground {
+  color: white;
+}
+.bg-brand-soft {
+  background: #f0faf3;
+}
+.text-destructive {
+  color: green;
+}
+.bg-destructive {
+  background-color: #fbeced;
+}
